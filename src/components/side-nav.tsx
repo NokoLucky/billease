@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -56,16 +57,14 @@ export function SideNav() {
       <SidebarMenu className="flex-1">
         {navItems.map((item) => (
           <SidebarMenuItem key={item.href}>
-            <Link href={item.href} passHref legacyBehavior>
+            <Link href={item.href} passHref>
               <SidebarMenuButton
-                asChild
                 isActive={pathname === item.href}
                 tooltip={item.label}
+                as="a"
               >
-                <a>
                   <item.icon />
                   <span>{item.label}</span>
-                </a>
               </SidebarMenuButton>
             </Link>
           </SidebarMenuItem>
@@ -75,16 +74,14 @@ export function SideNav() {
          <Separator className="mb-2"/>
          <SidebarMenu>
             <SidebarMenuItem>
-                <Link href={settingsItem.href} passHref legacyBehavior>
+                <Link href={settingsItem.href} passHref>
                 <SidebarMenuButton
-                    asChild
                     isActive={pathname === settingsItem.href}
                     tooltip={settingsItem.label}
+                    as="a"
                 >
-                    <a>
                     <settingsItem.icon />
                     <span>{settingsItem.label}</span>
-                    </a>
                 </SidebarMenuButton>
                 </Link>
             </SidebarMenuItem>
