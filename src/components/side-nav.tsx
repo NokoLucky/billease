@@ -36,7 +36,13 @@ const settingsItem = { href: '/settings', label: 'Settings', icon: Settings };
 
 export function SideNav() {
   const pathname = usePathname();
-  const { state } = useSidebar();
+  const { state, setOpenMobile, isMobile } = useSidebar();
+
+  const handleLinkClick = () => {
+    if (isMobile) {
+      setOpenMobile(false);
+    }
+  };
 
   return (
     <>
@@ -62,6 +68,7 @@ export function SideNav() {
               href={item.href}
               isActive={pathname === item.href}
               tooltip={item.label}
+              onClick={handleLinkClick}
             >
               <item.icon />
               <span>{item.label}</span>
@@ -78,6 +85,7 @@ export function SideNav() {
                 href={settingsItem.href}
                 isActive={pathname === settingsItem.href}
                 tooltip={settingsItem.label}
+                onClick={handleLinkClick}
               >
                 <settingsItem.icon />
                 <span>{settingsItem.label}</span>
