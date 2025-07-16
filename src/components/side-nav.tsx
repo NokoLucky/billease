@@ -57,16 +57,15 @@ export function SideNav() {
       <SidebarMenu className="flex-1">
         {navItems.map((item) => (
           <SidebarMenuItem key={item.href}>
-            <Link href={item.href} passHref>
-              <SidebarMenuButton
-                isActive={pathname === item.href}
-                tooltip={item.label}
-                as="a"
-              >
-                  <item.icon />
-                  <span>{item.label}</span>
-              </SidebarMenuButton>
-            </Link>
+            <SidebarMenuButton
+              as={Link}
+              href={item.href}
+              isActive={pathname === item.href}
+              tooltip={item.label}
+            >
+              <item.icon />
+              <span>{item.label}</span>
+            </SidebarMenuButton>
           </SidebarMenuItem>
         ))}
       </SidebarMenu>
@@ -74,16 +73,15 @@ export function SideNav() {
          <Separator className="mb-2"/>
          <SidebarMenu>
             <SidebarMenuItem>
-                <Link href={settingsItem.href} passHref>
-                <SidebarMenuButton
-                    isActive={pathname === settingsItem.href}
-                    tooltip={settingsItem.label}
-                    as="a"
-                >
-                    <settingsItem.icon />
-                    <span>{settingsItem.label}</span>
-                </SidebarMenuButton>
-                </Link>
+              <SidebarMenuButton
+                as={Link}
+                href={settingsItem.href}
+                isActive={pathname === settingsItem.href}
+                tooltip={settingsItem.label}
+              >
+                <settingsItem.icon />
+                <span>{settingsItem.label}</span>
+              </SidebarMenuButton>
             </SidebarMenuItem>
          </SidebarMenu>
       </SidebarFooter>
