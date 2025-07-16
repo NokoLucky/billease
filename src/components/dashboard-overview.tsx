@@ -20,7 +20,7 @@ export function DashboardOverview() {
         <CardContent>
           {nextDueBill ? (
             <>
-              <p className="text-2xl font-bold font-headline">${nextDueBill.amount.toFixed(2)}</p>
+              <p className="text-2xl font-bold font-headline">R{nextDueBill.amount.toFixed(2)}</p>
               <p className="text-sm text-muted-foreground">{nextDueBill.name} - Due {format(new Date(nextDueBill.dueDate), 'PPP')}</p>
             </>
           ) : (
@@ -33,7 +33,7 @@ export function DashboardOverview() {
           <CardTitle>Total Upcoming</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-2xl font-bold font-headline">${totalUpcoming.toFixed(2)}</p>
+          <p className="text-2xl font-bold font-headline">R{totalUpcoming.toFixed(2)}</p>
           <p className="text-sm text-muted-foreground">{upcomingBills.length} bills remaining</p>
         </CardContent>
       </Card>

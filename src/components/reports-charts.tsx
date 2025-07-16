@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useMemo } from 'react';
-import { Bar, BarChart, Pie, PieChart, Cell } from 'recharts';
+import { Bar, BarChart, Pie, PieChart, Cell, XAxis, YAxis } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from "@/components/ui/chart";
 import { bills as mockBills } from '@/lib/mock-data';
@@ -75,7 +75,7 @@ export function ReportsCharts() {
                          <BarChart data={paidBillsByMonth} accessibilityLayer>
                             <ChartTooltip content={<ChartTooltipContent />} />
                             <XAxis dataKey="name" tickLine={false} axisLine={false} />
-                            <YAxis tickLine={false} axisLine={false} tickFormatter={(value) => `$${value}`} />
+                            <YAxis tickLine={false} axisLine={false} tickFormatter={(value) => `R${value}`} />
                             <Bar dataKey="total" fill="var(--color-total)" radius={4} />
                         </BarChart>
                     </ChartContainer>

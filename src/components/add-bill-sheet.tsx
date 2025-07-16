@@ -51,11 +51,12 @@ export function AddBillSheet({ children }: { children: React.ReactNode }) {
             <Label htmlFor="currency" className="text-right">
               Currency
             </Label>
-            <Select defaultValue="USD">
+            <Select defaultValue="ZAR">
                 <SelectTrigger className="col-span-3">
                     <SelectValue placeholder="Select currency" />
                 </SelectTrigger>
                 <SelectContent>
+                    <SelectItem value="ZAR">ZAR</SelectItem>
                     <SelectItem value="USD">USD</SelectItem>
                     <SelectItem value="EUR">EUR</SelectItem>
                     <SelectItem value="GBP">GBP</SelectItem>

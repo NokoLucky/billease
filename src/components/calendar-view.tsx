@@ -66,7 +66,7 @@ export function CalendarView() {
                                             <p className="font-semibold">{bill.name}</p>
                                             <Badge variant={bill.isPaid ? 'secondary' : 'outline'}>{bill.category}</Badge>
                                         </div>
-                                        <p className="font-bold font-mono">${bill.amount.toFixed(2)}</p>
+                                        <p className="font-bold font-mono">R{bill.amount.toFixed(2)}</p>
                                     </li>
                                 ))}
                             </ul>

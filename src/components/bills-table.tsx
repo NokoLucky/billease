@@ -129,7 +129,7 @@ export function BillsTable() {
                              <Badge variant={bill.isPaid ? 'secondary' : 'destructive'}>
                                 {bill.isPaid ? 'Paid' : 'Due'}
                             </Badge>
-                             <p className="font-bold font-mono text-lg">${bill.amount.toFixed(2)}</p>
+                             <p className="font-bold font-mono text-lg">R{bill.amount.toFixed(2)}</p>
                         </div>
                         <div className="text-sm text-muted-foreground space-y-2">
                              <div className="flex items-center">
@@ -191,7 +191,7 @@ export function BillsTable() {
                                     {bill.category}
                                 </div>
                             </TableCell>
-                            <TableCell className="text-right font-mono">${bill.amount.toFixed(2)}</TableCell>
+                            <TableCell className="text-right font-mono">R{bill.amount.toFixed(2)}</TableCell>
                             <TableCell>{format(new Date(bill.dueDate), 'MMM dd, yyyy')}</TableCell>
                             <TableCell>
                                 <DropdownMenu>

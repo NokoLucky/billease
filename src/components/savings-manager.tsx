@@ -11,8 +11,8 @@ import { PiggyBank, Sparkles, Loader2 } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 export function SavingsManager() {
-    const [income, setIncome] = useState(5000);
-    const [savingsGoal, setSavingsGoal] = useState(500);
+    const [income, setIncome] = useState(25000);
+    const [savingsGoal, setSavingsGoal] = useState(2500);
     const [tips, setTips] = useState<string | null>(null);
     const [isPending, startTransition] = useTransition();
 
@@ -64,7 +64,7 @@ export function SavingsManager() {
                     </CardHeader>
                     <CardContent>
                         <p className={`text-3xl font-bold font-headline ${leftoverFunds < 0 ? 'text-destructive' : 'text-primary'}`}>
-                            ${leftoverFunds.toFixed(2)}
+                            R{leftoverFunds.toFixed(2)}
                         </p>
                     </CardContent>
                 </Card>

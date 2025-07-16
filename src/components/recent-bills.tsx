@@ -33,7 +33,7 @@ export function RecentBills() {
                             <p className="text-sm text-muted-foreground">Due {format(new Date(bill.dueDate), 'MMM dd, yyyy')}</p>
                         </div>
                         <div className="text-right">
-                           <p className={cn("font-bold text-lg", bill.isPaid && "line-through text-muted-foreground")}>${bill.amount.toFixed(2)}</p>
+                           <p className={cn("font-bold text-lg", bill.isPaid && "line-through text-muted-foreground")}>R{bill.amount.toFixed(2)}</p>
                         </div>
                         <div className="flex items-center pl-4">
                             <Checkbox id={`paid-${bill.id}`} checked={bill.isPaid} onCheckedChange={() => togglePaid(bill.id)} className="w-6 h-6"/>

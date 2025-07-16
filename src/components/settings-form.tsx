@@ -24,11 +24,12 @@ export function SettingsForm() {
             <CardContent>
                 <div className="max-w-xs">
                     <Label htmlFor="currency" className="sr-only">Currency</Label>
-                    <Select defaultValue="USD">
+                    <Select defaultValue="ZAR">
                         <SelectTrigger id="currency">
                             <SelectValue placeholder="Select currency" />
                         </SelectTrigger>
                         <SelectContent>
+                            <SelectItem value="ZAR">ZAR - South African Rand</SelectItem>
                             <SelectItem value="USD">USD - United States Dollar</SelectItem>
                             <SelectItem value="EUR">EUR - Euro</SelectItem>
                             <SelectItem value="GBP">GBP - British Pound</SelectItem>
