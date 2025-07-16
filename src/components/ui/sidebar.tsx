@@ -535,15 +535,17 @@ const sidebarMenuButtonVariants = cva(
   }
 )
 
-type SidebarMenuButtonProps = React.ComponentProps<"button"> & {
-    as?: React.ElementType;
-    isActive?: boolean;
-    tooltip?: string | React.ComponentProps<typeof TooltipContent>;
-} & VariantProps<typeof sidebarMenuButtonVariants>;
+type SidebarMenuButtonProps = (
+  | (React.ComponentProps<typeof Button> & { as?: "button" })
+  | (React.ComponentProps<typeof Link> & { as: typeof Link })
+) & {
+  isActive?: boolean
+  tooltip?: string | React.ComponentProps<typeof TooltipContent>
+} & Omit<VariantProps<typeof sidebarMenuButtonVariants>, "size"> & { size?: "default" | "sm" | "lg" }
 
 const SidebarMenuButton = React.forwardRef<
-  HTMLButtonElement,
-  SidebarMenuButtonProps & { href?: string }
+  HTMLButtonElement | HTMLAnchorElement,
+  SidebarMenuButtonProps
 >(
   (
     {
@@ -559,9 +561,6 @@ const SidebarMenuButton = React.forwardRef<
   ) => {
     const { isMobile, state } = useSidebar();
     
-    // If 'as' is a Link component, we need to handle the ref differently
-    const isLink = Comp === Link;
-
     const button = (
         <Comp
           ref={ref as any}
