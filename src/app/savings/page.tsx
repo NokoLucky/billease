@@ -1,12 +1,11 @@
 import { SavingsManager } from '@/components/savings-manager';
+import { PageHeader } from '@/components/page-header';
 
 export default function SavingsPage() {
     return (
-        <div className="p-4 md:p-8">
-            <header className="pb-4 border-b">
-                <h1 className="text-3xl font-bold font-headline">Savings Goals & Tips</h1>
-            </header>
-            <main className="py-8">
+        <div className="flex flex-col min-h-screen">
+            <PageHeader title="Savings Goals & Tips" />
+            <main className="flex-1 py-8 px-4 md:px-8">
                 <SavingsManager />
             </main>
         </div>

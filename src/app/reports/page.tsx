@@ -1,12 +1,12 @@
 import { ReportsCharts } from "@/components/reports-charts";
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
+import { PageHeader } from "@/components/page-header";
 
 export default function ReportsPage() {
     return (
-        <div className="p-4 md:p-8">
-            <header className="flex items-center justify-between pb-4 border-b">
-                <h1 className="text-3xl font-bold font-headline">Reports & History</h1>
+        <div className="flex flex-col min-h-screen">
+            <PageHeader title="Reports & History">
                 <div className="flex gap-2">
                     <Button variant="outline">
                         <Download className="mr-2" />
@@ -17,8 +17,8 @@ export default function ReportsPage() {
                         Export PDF
                     </Button>
                 </div>
-            </header>
-            <main className="py-8">
+            </PageHeader>
+            <main className="flex-1 py-8 px-4 md:px-8">
                 <ReportsCharts />
             </main>
         </div>

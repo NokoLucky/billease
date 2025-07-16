@@ -27,7 +27,9 @@ export default function RootLayout({
             <Sidebar>
                 <SideNav />
             </Sidebar>
-            <SidebarInset>{children}</SidebarInset>
+            <SidebarInset>
+                {children}
+            </SidebarInset>
         </SidebarProvider>
         <Toaster />
       </body>

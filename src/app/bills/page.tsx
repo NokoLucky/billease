@@ -2,20 +2,20 @@ import { BillsTable } from "@/components/bills-table";
 import { AddBillSheet } from "@/components/add-bill-sheet";
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
+import { PageHeader } from "@/components/page-header";
 
 export default function BillsPage() {
     return (
-        <div className="p-4 md:p-8">
-            <header className="flex items-center justify-between pb-4 border-b">
-                <h1 className="text-3xl font-bold font-headline">My Bills</h1>
+        <div className="flex flex-col min-h-screen">
+            <PageHeader title="My Bills">
                  <AddBillSheet>
                     <Button>
                         <PlusCircle className="mr-2" />
                         Add Bill
                     </Button>
                 </AddBillSheet>
-            </header>
-            <main className="py-8">
+            </PageHeader>
+            <main className="flex-1 py-8 px-4 md:px-8">
                 <BillsTable />
             </main>
         </div>
