@@ -20,10 +20,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Switch } from './ui/switch';
 import { categories } from '@/lib/mock-data';
 import React, { useState } from 'react';
-import { useForm, Controller } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Form, FormControl, FormField, FormItem, FormMessage } from './ui/form';
@@ -44,15 +43,16 @@ const billSchema = z.object({
   dueDate: z.date({ required_error: 'Due date is required' }),
   frequency: z.enum(['one-time', 'monthly', 'yearly']),
   category: z.string().min(1, 'Category is required'),
-  isPaid: z.boolean(),
 });
+
+type BillFormValues = z.infer<typeof billSchema>;
 
 export function AddBillSheet({ children, onBillAdded }: { children: React.ReactNode, onBillAdded: () => void }) {
   const [isOpen, setIsOpen] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
   
-  const form = useForm<z.infer<typeof billSchema>>({
+  const form = useForm<BillFormValues>({
     resolver: zodResolver(billSchema),
     defaultValues: {
       name: '',
@@ -60,13 +60,12 @@ export function AddBillSheet({ children, onBillAdded }: { children: React.ReactN
       dueDate: undefined,
       frequency: 'monthly',
       category: '',
-      isPaid: false,
     },
   });
 
   const { isSubmitting } = form.formState;
 
-  const onSubmit = async (values: z.infer<typeof billSchema>) => {
+  const onSubmit = async (values: BillFormValues) => {
     if (!user) {
       toast({
         variant: 'destructive',
@@ -76,9 +75,9 @@ export function AddBillSheet({ children, onBillAdded }: { children: React.ReactN
       return;
     }
     
-    // Pass the values directly, but cast category to the specific BillCategory type.
     const billData: BillInput = {
         ...values,
+        isPaid: false, // Explicitly set isPaid to false for new bills
         category: values.category as BillCategory,
     };
 
