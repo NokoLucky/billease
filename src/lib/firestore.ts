@@ -26,8 +26,11 @@ export const getBills = async (userId: string): Promise<Bill[]> => {
 
 export const addBill = async (userId: string, bill: BillInput) => {
     const billsCollection = getBillsCollection(userId);
-    // Firestore will automatically convert the JS Date object to a Timestamp.
-    await addDoc(billsCollection, bill);
+    const billWithTimestamp = {
+        ...bill,
+        dueDate: Timestamp.fromDate(bill.dueDate)
+    };
+    await addDoc(billsCollection, billWithTimestamp);
 };
 
 export const updateBill = async (userId: string, billId: string, updates: Partial<Bill>) => {
