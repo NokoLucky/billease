@@ -1,11 +1,18 @@
+
+'use client';
 import { AddBillSheet } from '@/components/add-bill-sheet';
 import { DashboardOverview } from '@/components/dashboard-overview';
 import { RecentBills } from '@/components/recent-bills';
 import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
 import { PageHeader } from '@/components/page-header';
+import { useAuth } from '@/components/auth-provider';
 
 export default function Home() {
+  const { user } = useAuth();
+  
+  if (!user) return null; // Or a loading spinner
+
   return (
     <div className="flex flex-col min-h-screen">
       <PageHeader title="Dashboard">

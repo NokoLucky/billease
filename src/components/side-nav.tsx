@@ -2,7 +2,7 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   LayoutDashboard,
   ReceiptText,
@@ -11,9 +11,15 @@ import {
   BarChart3,
   Settings,
   Wallet,
+  LogIn,
+  UserPlus,
+  User,
+  LogOut,
 } from 'lucide-react';
-
+import { getAuth, signOut } from 'firebase/auth';
+import { firebaseApp } from '@/lib/firebase';
 import { cn } from '@/lib/utils';
+import { useAuth } from './auth-provider';
 import {
   SidebarHeader,
   SidebarMenu,
@@ -23,6 +29,9 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar';
 import { Separator } from './ui/separator';
+import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
+import { Button } from './ui/button';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from './ui/dropdown-menu';
 
 const navItems = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard },
@@ -33,15 +42,30 @@ const navItems = [
 ];
 
 const settingsItem = { href: '/settings', label: 'Settings', icon: Settings };
+const profileItem = { href: '/profile', label: 'My Profile', icon: User };
+
+const authItems = [
+    { href: '/auth/signin', label: 'Sign In', icon: LogIn },
+    { href: '/auth/signup', label: 'Sign Up', icon: UserPlus },
+];
 
 export function SideNav() {
   const pathname = usePathname();
+  const router = useRouter();
   const { state, setOpenMobile, isMobile } = useSidebar();
+  const { user } = useAuth();
 
   const handleLinkClick = () => {
     if (isMobile) {
       setOpenMobile(false);
     }
+  };
+
+  const handleSignOut = async () => {
+    const auth = getAuth(firebaseApp);
+    await signOut(auth);
+    if(isMobile) setOpenMobile(false);
+    router.push('/auth/signin');
   };
 
   return (
@@ -61,7 +85,22 @@ export function SideNav() {
       </SidebarHeader>
       <Separator />
       <SidebarMenu className="flex-1">
-        {navItems.map((item) => (
+        {user && navItems.map((item) => (
+          <SidebarMenuItem key={item.href}>
+            <SidebarMenuButton
+              as={Link}
+              href={item.href}
+              isActive={pathname === item.href}
+              tooltip={item.label}
+              onClick={handleLinkClick}
+              className="text-base h-10 [&>svg]:size-5"
+            >
+              <item.icon />
+              <span>{item.label}</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        ))}
+         {!user && authItems.map((item) => (
           <SidebarMenuItem key={item.href}>
             <SidebarMenuButton
               as={Link}
@@ -78,22 +117,46 @@ export function SideNav() {
         ))}
       </SidebarMenu>
       <SidebarFooter>
-         <Separator className="mb-2"/>
-         <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                as={Link}
-                href={settingsItem.href}
-                isActive={pathname === settingsItem.href}
-                tooltip={settingsItem.label}
-                onClick={handleLinkClick}
-                className="text-base h-10 [&>svg]:size-5"
-              >
-                <settingsItem.icon />
-                <span>{settingsItem.label}</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-         </SidebarMenu>
+         <Separator className="my-2"/>
+         { user ? (
+            <div className={cn("p-2", state === 'collapsed' && 'p-0')}>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                   <Button variant="ghost" className={cn("w-full justify-start p-2 h-auto", state === 'collapsed' && 'justify-center w-10 h-10 p-0')}>
+                      <div className='flex items-center gap-2'>
+                        <Avatar className="w-8 h-8">
+                          <AvatarImage src={user.photoURL ?? undefined} />
+                          <AvatarFallback>{user.email?.[0].toUpperCase()}</AvatarFallback>
+                        </Avatar>
+                        <div className={cn("flex flex-col items-start transition-opacity duration-200", state === 'collapsed' && 'opacity-0 hidden')}>
+                           <span className='font-semibold text-sm'>{user.displayName || user.email}</span>
+                           <span className='text-xs text-muted-foreground'>View Profile</span>
+                        </div>
+                      </div>
+                   </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56 mb-2 ml-2" side="top" align="start">
+                    <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                        <Link href={profileItem.href} onClick={handleLinkClick}><User className="mr-2 h-4 w-4" /><span>{profileItem.label}</span></Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                         <Link href={settingsItem.href} onClick={handleLinkClick}><Settings className="mr-2 h-4 w-4" /><span>{settingsItem.label}</span></Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleSignOut}>
+                        <LogOut className="mr-2 h-4 w-4" />
+                        <span>Sign Out</span>
+                    </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+         ) : (
+            <div className={cn('p-2', state === 'collapsed' && 'p-0')}>
+                {/* Potentially show something for logged out users, or just be empty */}
+            </div>
+         )}
       </SidebarFooter>
     </>
   );
