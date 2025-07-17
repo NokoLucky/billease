@@ -182,7 +182,10 @@ export function BillsTable({ bills, loading, onBillUpdated }: BillsTableProps) {
                                 <DropdownMenuItem>Edit Bill</DropdownMenuItem>
                                 <AlertDialog>
                                     <AlertDialogTrigger asChild>
-                                        <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive">Delete Bill</DropdownMenuItem>
+                                        <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive focus:bg-destructive/10 focus:text-destructive">
+                                             <Trash2 className="mr-2 h-4 w-4"/>
+                                            Delete
+                                        </DropdownMenuItem>
                                     </AlertDialogTrigger>
                                     <AlertDialogContent>
                                         <AlertDialogHeader>
@@ -193,7 +196,7 @@ export function BillsTable({ bills, loading, onBillUpdated }: BillsTableProps) {
                                         </AlertDialogHeader>
                                         <AlertDialogFooter>
                                             <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                            <AlertDialogAction onClick={() => handleDeleteBill(bill.id)}>Continue</AlertDialogAction>
+                                            <AlertDialogAction className='bg-destructive hover:bg-destructive/90' onClick={() => handleDeleteBill(bill.id)}>Delete</AlertDialogAction>
                                         </AlertDialogFooter>
                                     </AlertDialogContent>
                                 </AlertDialog>
@@ -312,9 +315,9 @@ export function BillsTable({ bills, loading, onBillUpdated }: BillsTableProps) {
                 </TableBody>
             </Table>
         </Card>
-        {filteredBills.length === 0 && (
+        {filteredBills.length === 0 && !loading && (
             <div className="text-center text-muted-foreground pt-8">
-                No bills match your filters.
+                You have no bills. Add one to get started!
             </div>
         )}
     </div>

@@ -69,7 +69,7 @@ export function RecentBills({ bills, loading, onBillUpdated }: RecentBillsProps)
         )
     }
 
-    if (bills.length === 0) {
+    if (bills.length === 0 && !loading) {
         return (
             <Card>
                 <CardContent className="p-8 text-center text-muted-foreground">

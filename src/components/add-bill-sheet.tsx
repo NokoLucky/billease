@@ -76,9 +76,12 @@ export function AddBillSheet({ children, onBillAdded }: { children: React.ReactN
     }
     
     const billData: BillInput = {
-        ...values,
-        isPaid: false, // Explicitly set isPaid to false for new bills
+        name: values.name,
+        amount: values.amount,
+        dueDate: values.dueDate,
+        frequency: values.frequency,
         category: values.category as BillCategory,
+        isPaid: false,
     };
 
     try {
