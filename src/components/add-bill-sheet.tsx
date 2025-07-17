@@ -76,11 +76,10 @@ export function AddBillSheet({ children, onBillAdded }: { children: React.ReactN
       return;
     }
     
+    // Pass the values directly, but cast category to the specific BillCategory type.
     const billData: BillInput = {
         ...values,
-        amount: Number(values.amount),
         category: values.category as BillCategory,
-        dueDate: values.dueDate.toISOString(),
     };
 
     try {
