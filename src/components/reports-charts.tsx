@@ -1,16 +1,17 @@
+
 'use client';
 
 import React, { useMemo } from 'react';
 import { Bar, BarChart, Pie, PieChart, Cell, XAxis, YAxis } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from "@/components/ui/chart";
-import { bills as mockBills } from '@/lib/mock-data';
 import { eachMonthOfInterval, format, startOfYear, endOfYear, subMonths } from 'date-fns';
 import type { ChartConfig } from "@/components/ui/chart";
+import type { Bill } from '@/lib/types';
 
 const COLORS = ["hsl(var(--chart-1))", "hsl(var(--chart-2))", "hsl(var(--chart-3))", "hsl(var(--chart-4))", "hsl(var(--chart-5))"];
 
-export function ReportsCharts() {
+export function ReportsCharts({ bills }: { bills: Bill[] }) {
     const paidBillsByMonth = useMemo(() => {
         const months = eachMonthOfInterval({
             start: startOfYear(subMonths(new Date(), 5)),
@@ -22,7 +23,7 @@ export function ReportsCharts() {
             total: 0
         }));
         
-        mockBills.filter(b => b.isPaid).forEach(bill => {
+        bills.filter(b => b.isPaid).forEach(bill => {
             const monthIndex = new Date(bill.dueDate).getMonth();
             const year = new Date(bill.dueDate).getFullYear();
             const currentYear = new Date().getFullYear();
@@ -36,24 +37,25 @@ export function ReportsCharts() {
         });
 
         return data;
-    }, []);
+    }, [bills]);
     
     const spendingByCategory = useMemo(() => {
         const data: { [key: string]: number } = {};
-        mockBills.filter(b => b.isPaid).forEach(bill => {
+        bills.filter(b => b.isPaid).forEach(bill => {
             if (!data[bill.category]) {
                 data[bill.category] = 0;
             }
             data[bill.category] += bill.amount;
         });
         return Object.entries(data).map(([name, value]) => ({ name, value: Number(value.toFixed(2)) }));
-    }, []);
+    }, [bills]);
 
     const barChartConfig: ChartConfig = {
       total: { label: "Total Paid", color: "hsl(var(--chart-1))" },
     };
 
     const pieChartConfig = useMemo(() => {
+        if (spendingByCategory.length === 0) return {};
         return spendingByCategory.reduce((acc, category, index) => {
             acc[category.name] = {
                 label: category.name,
@@ -87,17 +89,23 @@ export function ReportsCharts() {
                     <CardDescription>Breakdown of paid bills by category</CardDescription>
                 </CardHeader>
                 <CardContent className="flex items-center justify-center">
-                    <ChartContainer config={pieChartConfig} className="h-[300px] w-full">
-                        <PieChart>
-                             <ChartTooltip content={<ChartTooltipContent nameKey="name" />} />
-                            <Pie data={spendingByCategory} dataKey="value" nameKey="name" innerRadius={60}>
-                                {spendingByCategory.map((entry, index) => (
-                                    <Cell key={`cell-${index}`} fill={pieChartConfig[entry.name]?.color} />
-                                ))}
-                            </Pie>
-                            <ChartLegend content={<ChartLegendContent nameKey="name" />} />
-                        </PieChart>
-                    </ChartContainer>
+                    {spendingByCategory.length > 0 ? (
+                        <ChartContainer config={pieChartConfig} className="h-[300px] w-full">
+                            <PieChart>
+                                <ChartTooltip content={<ChartTooltipContent nameKey="name" />} />
+                                <Pie data={spendingByCategory} dataKey="value" nameKey="name" innerRadius={60}>
+                                    {spendingByCategory.map((entry, index) => (
+                                        <Cell key={`cell-${index}`} fill={pieChartConfig[entry.name]?.color} />
+                                    ))}
+                                </Pie>
+                                <ChartLegend content={<ChartLegendContent nameKey="name" />} />
+                            </PieChart>
+                        </ChartContainer>
+                    ) : (
+                        <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+                            No paid bills to display.
+                        </div>
+                    )}
                 </CardContent>
             </Card>
         </div>

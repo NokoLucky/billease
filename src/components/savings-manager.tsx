@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useTransition } from 'react';
@@ -6,11 +7,11 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { getSavingsTips, type SavingsTipsInput } from '@/ai/flows/savings-tips';
-import { bills } from '@/lib/mock-data';
 import { PiggyBank, Sparkles, Loader2 } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import type { Bill } from '@/lib/types';
 
-export function SavingsManager() {
+export function SavingsManager({ bills }: { bills: Bill[] }) {
     const [income, setIncome] = useState(25000);
     const [savingsGoal, setSavingsGoal] = useState(2500);
     const [tips, setTips] = useState<string | null>(null);

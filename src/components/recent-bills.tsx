@@ -1,29 +1,89 @@
+
 "use client";
-import { useState } from 'react';
+import React, { useTransition } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import { bills as initialBills } from "@/lib/mock-data";
 import { categories } from '@/lib/mock-data';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
+import type { Bill } from '@/lib/types';
+import { useAuth } from './auth-provider';
+import { updateBill } from '@/lib/firestore';
+import { useToast } from '@/hooks/use-toast';
+import { Skeleton } from './ui/skeleton';
 
-export function RecentBills() {
-    const [bills, setBills] = useState(initialBills.sort((a, b) => new Date(b.dueDate).getTime() - new Date(a.dueDate).getTime()).slice(0, 5));
+type RecentBillsProps = {
+    bills: Bill[];
+    loading: boolean;
+    onBillUpdated: () => void;
+}
 
-    const togglePaid = (id: string) => {
-        setBills(bills.map(bill => bill.id === id ? { ...bill, isPaid: !bill.isPaid } : bill));
+export function RecentBills({ bills, loading, onBillUpdated }: RecentBillsProps) {
+    const { user } = useAuth();
+    const { toast } = useToast();
+    const [isPending, startTransition] = useTransition();
+
+    const recentBills = bills.sort((a, b) => new Date(b.dueDate).getTime() - new Date(a.dueDate).getTime()).slice(0, 5)
+
+    const handleTogglePaid = (bill: Bill) => {
+        if (!user) return;
+        startTransition(async () => {
+            try {
+                await updateBill(user.uid, bill.id, { isPaid: !bill.isPaid });
+                onBillUpdated();
+                toast({ title: 'Success', description: `${bill.name} marked as ${!bill.isPaid ? 'paid' : 'unpaid'}.` });
+            } catch (error) {
+                toast({ variant: 'destructive', title: 'Error', description: 'Failed to update bill status.' });
+            }
+        });
     };
 
     const getCategoryIcon = (categoryName: string) => {
         const category = categories.find(c => c.name === categoryName);
         return category ? <category.icon className="w-5 h-5" /> : null;
     }
+    
+    if (loading) {
+        return (
+             <Card>
+                <CardContent className="p-0">
+                    <div className="divide-y divide-border">
+                        {[...Array(3)].map((_, i) => (
+                            <div key={i} className="flex items-center gap-4 p-4">
+                                <Skeleton className="h-10 w-10 rounded-lg" />
+                                <div className="flex-1 space-y-2">
+                                    <Skeleton className="h-4 w-3/4" />
+                                    <Skeleton className="h-4 w-1/2" />
+                                </div>
+                                <div className="text-right space-y-2">
+                                   <Skeleton className="h-6 w-20" />
+                                </div>
+                                <div className="pl-4">
+                                    <Skeleton className="h-6 w-6" />
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </CardContent>
+            </Card>
+        )
+    }
+
+    if (bills.length === 0) {
+        return (
+            <Card>
+                <CardContent className="p-8 text-center text-muted-foreground">
+                    You have no bills yet. Add one to get started!
+                </CardContent>
+            </Card>
+        )
+    }
 
     return (
         <Card>
             <CardContent className="p-0">
                 <div className="divide-y divide-border">
-                {bills.map(bill => (
+                {recentBills.map(bill => (
                     <div key={bill.id} className={cn("flex items-center gap-4 p-4 transition-all duration-300", bill.isPaid && "bg-secondary/50")}>
                         <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-secondary text-secondary-foreground">
                             {getCategoryIcon(bill.category)}
@@ -36,7 +96,7 @@ export function RecentBills() {
                            <p className={cn("font-bold text-lg", bill.isPaid && "line-through text-muted-foreground")}>R{bill.amount.toFixed(2)}</p>
                         </div>
                         <div className="flex items-center pl-4">
-                            <Checkbox id={`paid-${bill.id}`} checked={bill.isPaid} onCheckedChange={() => togglePaid(bill.id)} className="w-6 h-6"/>
+                            <Checkbox id={`paid-${bill.id}`} checked={bill.isPaid} onCheckedChange={() => handleTogglePaid(bill)} className="w-6 h-6" disabled={isPending}/>
                             <label htmlFor={`paid-${bill.id}`} className="sr-only">Mark {bill.name} as paid</label>
                         </div>
                     </div>

@@ -1,6 +1,7 @@
+
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useTransition } from 'react';
 import {
   Table,
   TableHeader,
@@ -9,7 +10,7 @@ import {
   TableBody,
   TableCell,
 } from '@/components/ui/table';
-import { bills as mockBills, categories } from '@/lib/mock-data';
+import { categories } from '@/lib/mock-data';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -21,7 +22,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Button } from './ui/button';
-import { ArrowUpDown, MoreHorizontal } from 'lucide-react';
+import { ArrowUpDown, MoreHorizontal, Loader2, Trash2 } from 'lucide-react';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -32,12 +33,35 @@ import {
 } from "@/components/ui/dropdown-menu"
 import type { Bill } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+import { useAuth } from './auth-provider';
+import { updateBill, deleteBill } from '@/lib/firestore';
+import { useToast } from '@/hooks/use-toast';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+import { Skeleton } from './ui/skeleton';
 
-export function BillsTable() {
-    const [bills, setBills] = useState<Bill[]>(mockBills);
+type BillsTableProps = {
+    bills: Bill[];
+    loading: boolean;
+    onBillUpdated: () => void;
+}
+
+export function BillsTable({ bills, loading, onBillUpdated }: BillsTableProps) {
     const [filter, setFilter] = useState('');
     const [categoryFilter, setCategoryFilter] = useState('All');
     const [sortConfig, setSortConfig] = useState<{ key: keyof Bill, direction: 'asc' | 'desc' } | null>({ key: 'dueDate', direction: 'asc' });
+    const { user } = useAuth();
+    const { toast } = useToast();
+    const [isPending, startTransition] = useTransition();
 
     const handleSort = (key: keyof Bill) => {
         let direction: 'asc' | 'desc' = 'asc';
@@ -71,13 +95,47 @@ export function BillsTable() {
         });
     }, [sortedBills, filter, categoryFilter]);
     
-    const togglePaid = (id: string) => {
-        setBills(bills.map(bill => bill.id === id ? { ...bill, isPaid: !bill.isPaid } : bill));
+    const handleTogglePaid = (bill: Bill) => {
+        if (!user) return;
+        startTransition(async () => {
+            try {
+                await updateBill(user.uid, bill.id, { isPaid: !bill.isPaid });
+                onBillUpdated();
+                toast({ title: 'Success', description: `${bill.name} marked as ${!bill.isPaid ? 'paid' : 'unpaid'}.` });
+            } catch (error) {
+                toast({ variant: 'destructive', title: 'Error', description: 'Failed to update bill status.' });
+            }
+        });
     };
+
+    const handleDeleteBill = (billId: string) => {
+         if (!user) return;
+        startTransition(async () => {
+            try {
+                await deleteBill(user.uid, billId);
+                onBillUpdated();
+                toast({ title: 'Success', description: 'Bill deleted successfully.' });
+            } catch (error) {
+                toast({ variant: 'destructive', title: 'Error', description: 'Failed to delete bill.' });
+            }
+        });
+    }
     
     const getCategoryIcon = (categoryName: string) => {
         const category = categories.find(c => c.name === categoryName);
         return category ? <category.icon className="w-5 h-5 mr-2" /> : null;
+    }
+
+    if (loading) {
+        return (
+            <div className="space-y-4">
+                <div className="flex flex-col md:flex-row items-center gap-4 py-4">
+                    <Skeleton className="h-10 w-full md:max-w-sm" />
+                    <Skeleton className="h-10 w-full md:w-[180px]" />
+                </div>
+                <Skeleton className="h-64 w-full" />
+            </div>
+        )
     }
 
   return (
@@ -88,8 +146,9 @@ export function BillsTable() {
                 value={filter}
                 onChange={(event) => setFilter(event.target.value)}
                 className="w-full md:max-w-sm"
+                disabled={isPending}
             />
-            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+            <Select value={categoryFilter} onValueChange={setCategoryFilter} disabled={isPending}>
                 <SelectTrigger className="w-full md:w-[180px]">
                     <SelectValue placeholder="Filter by category" />
                 </SelectTrigger>
@@ -98,6 +157,7 @@ export function BillsTable() {
                     {categories.map(c => <SelectItem key={c.name} value={c.name}>{c.name}</SelectItem>)}
                 </SelectContent>
             </Select>
+            {isPending && <Loader2 className="h-5 w-5 animate-spin" />}
         </div>
         
         {/* Mobile Card View */}
@@ -108,19 +168,35 @@ export function BillsTable() {
                         <CardTitle className="text-lg">{bill.name}</CardTitle>
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" className="h-8 w-8 p-0">
+                                <Button variant="ghost" className="h-8 w-8 p-0" disabled={isPending}>
                                 <span className="sr-only">Open menu</span>
                                 <MoreHorizontal className="h-4 w-4" />
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                                 <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                <DropdownMenuItem onClick={() => togglePaid(bill.id)}>
+                                <DropdownMenuItem onClick={() => handleTogglePaid(bill)}>
                                     {bill.isPaid ? 'Mark as Unpaid' : 'Mark as Paid'}
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem>Edit Bill</DropdownMenuItem>
-                                <DropdownMenuItem className="text-destructive">Delete Bill</DropdownMenuItem>
+                                <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                        <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive">Delete Bill</DropdownMenuItem>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                        <AlertDialogHeader>
+                                            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                            <AlertDialogDescription>
+                                                This action cannot be undone. This will permanently delete the bill for {bill.name}.
+                                            </AlertDialogDescription>
+                                        </AlertDialogHeader>
+                                        <AlertDialogFooter>
+                                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                            <AlertDialogAction onClick={() => handleDeleteBill(bill.id)}>Continue</AlertDialogAction>
+                                        </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                </AlertDialog>
                             </DropdownMenuContent>
                         </DropdownMenu>
                     </CardHeader>
@@ -150,25 +226,25 @@ export function BillsTable() {
                     <TableRow>
                         <TableHead className="w-[100px]">Status</TableHead>
                         <TableHead>
-                            <Button variant="ghost" onClick={() => handleSort('name')}>
+                            <Button variant="ghost" onClick={() => handleSort('name')} disabled={isPending}>
                                 Bill
                                 <ArrowUpDown className="ml-2 h-4 w-4" />
                             </Button>
                         </TableHead>
                         <TableHead>
-                            <Button variant="ghost" onClick={() => handleSort('category')}>
+                            <Button variant="ghost" onClick={() => handleSort('category')} disabled={isPending}>
                                 Category
                                 <ArrowUpDown className="ml-2 h-4 w-4" />
                             </Button>
                         </TableHead>
                         <TableHead className="text-right">
-                             <Button variant="ghost" onClick={() => handleSort('amount')}>
+                             <Button variant="ghost" onClick={() => handleSort('amount')} disabled={isPending}>
                                 Amount
                                 <ArrowUpDown className="ml-2 h-4 w-4" />
                             </Button>
                         </TableHead>
                         <TableHead>
-                             <Button variant="ghost" onClick={() => handleSort('dueDate')}>
+                             <Button variant="ghost" onClick={() => handleSort('dueDate')} disabled={isPending}>
                                 Due Date
                                 <ArrowUpDown className="ml-2 h-4 w-4" />
                             </Button>
@@ -196,19 +272,38 @@ export function BillsTable() {
                             <TableCell>
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
-                                        <Button variant="ghost" className="h-8 w-8 p-0">
+                                        <Button variant="ghost" className="h-8 w-8 p-0" disabled={isPending}>
                                         <span className="sr-only">Open menu</span>
                                         <MoreHorizontal className="h-4 w-4" />
                                         </Button>
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent align="end">
                                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                        <DropdownMenuItem onClick={() => togglePaid(bill.id)}>
+                                        <DropdownMenuItem onClick={() => handleTogglePaid(bill)}>
                                             {bill.isPaid ? 'Mark as Unpaid' : 'Mark as Paid'}
                                         </DropdownMenuItem>
                                         <DropdownMenuSeparator />
                                         <DropdownMenuItem>Edit Bill</DropdownMenuItem>
-                                        <DropdownMenuItem className="text-destructive">Delete Bill</DropdownMenuItem>
+                                        <AlertDialog>
+                                            <AlertDialogTrigger asChild>
+                                                <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive focus:bg-destructive/10 focus:text-destructive">
+                                                    <Trash2 className="mr-2 h-4 w-4"/>
+                                                    Delete
+                                                </DropdownMenuItem>
+                                            </AlertDialogTrigger>
+                                            <AlertDialogContent>
+                                                <AlertDialogHeader>
+                                                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                                    <AlertDialogDescription>
+                                                        This action cannot be undone. This will permanently delete the bill for {bill.name}.
+                                                    </AlertDialogDescription>
+                                                </AlertDialogHeader>
+                                                <AlertDialogFooter>
+                                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                    <AlertDialogAction className='bg-destructive hover:bg-destructive/90' onClick={() => handleDeleteBill(bill.id)}>Delete</AlertDialogAction>
+                                                </AlertDialogFooter>
+                                            </AlertDialogContent>
+                                        </AlertDialog>
                                     </DropdownMenuContent>
                                 </DropdownMenu>
                             </TableCell>
@@ -217,6 +312,11 @@ export function BillsTable() {
                 </TableBody>
             </Table>
         </Card>
+        {filteredBills.length === 0 && (
+            <div className="text-center text-muted-foreground pt-8">
+                No bills match your filters.
+            </div>
+        )}
     </div>
   );
 }

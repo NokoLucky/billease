@@ -1,20 +1,20 @@
+
 'use client';
 
 import React, { useState, useMemo } from 'react';
 import { Calendar } from '@/components/ui/calendar';
 import { Card, CardContent } from '@/components/ui/card';
-import { bills as mockBills } from '@/lib/mock-data';
 import { format, isSameDay } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import type { Bill } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
-export function CalendarView() {
+export function CalendarView({ bills }: { bills: Bill[]}) {
     const [date, setDate] = useState<Date | undefined>(new Date());
 
     const billsByDate = useMemo(() => {
         const map = new Map<string, Bill[]>();
-        mockBills.forEach(bill => {
+        bills.forEach(bill => {
             const day = format(new Date(bill.dueDate), 'yyyy-MM-dd');
             if (!map.has(day)) {
                 map.set(day, []);
@@ -22,9 +22,9 @@ export function CalendarView() {
             map.get(day)!.push(bill);
         });
         return map;
-    }, []);
+    }, [bills]);
 
-    const selectedDayBills = date ? mockBills.filter(bill => isSameDay(new Date(bill.dueDate), date)) : [];
+    const selectedDayBills = date ? bills.filter(bill => isSameDay(new Date(bill.dueDate), date)) : [];
     
     return (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

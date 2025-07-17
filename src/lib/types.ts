@@ -12,6 +12,9 @@ export interface Bill {
   frequency: 'monthly' | 'yearly' | 'one-time';
 }
 
+export type BillInput = Omit<Bill, 'id'>;
+
+
 export interface Category {
   name: BillCategory;
   icon: LucideIcon;

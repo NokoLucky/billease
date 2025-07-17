@@ -7,16 +7,18 @@ import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
 import { PageHeader } from '@/components/page-header';
 import { useAuth } from '@/components/auth-provider';
+import { useBills } from '@/lib/firestore';
 
 export default function Home() {
   const { user } = useAuth();
+  const { bills, loading, refetch } = useBills();
   
   if (!user) return null; // Or a loading spinner
 
   return (
     <div className="flex flex-col min-h-screen">
       <PageHeader title="Dashboard">
-        <AddBillSheet>
+        <AddBillSheet onBillAdded={refetch}>
           <Button>
             <PlusCircle className="mr-2" />
             Add Bill
@@ -24,10 +26,10 @@ export default function Home() {
         </AddBillSheet>
       </PageHeader>
       <main className="flex-1 py-8 px-4 md:px-8">
-        <DashboardOverview />
+        <DashboardOverview bills={bills} loading={loading} />
         <div className="mt-8">
             <h2 className="mb-4 text-2xl font-bold font-headline">Recent Bills</h2>
-            <RecentBills />
+            <RecentBills bills={bills} loading={loading} onBillUpdated={refetch} />
         </div>
       </main>
     </div>
