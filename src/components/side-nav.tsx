@@ -15,6 +15,9 @@ import {
   UserPlus,
   User,
   LogOut,
+  Moon,
+  Sun,
+  Monitor,
 } from 'lucide-react';
 import { getAuth, signOut } from 'firebase/auth';
 import { firebaseApp } from '@/lib/firebase';
@@ -31,7 +34,8 @@ import {
 import { Separator } from './ui/separator';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Button } from './ui/button';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from './ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent, DropdownMenuPortal } from './ui/dropdown-menu';
+import { useTheme } from 'next-themes';
 
 const navItems = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard },
@@ -54,6 +58,7 @@ export function SideNav() {
   const router = useRouter();
   const { state, setOpenMobile, isMobile } = useSidebar();
   const { user } = useAuth();
+  const { setTheme } = useTheme();
 
   const handleLinkClick = () => {
     if (isMobile) {
@@ -130,7 +135,7 @@ export function SideNav() {
                         </Avatar>
                         <div className={cn("flex flex-col items-start transition-opacity duration-200", state === 'collapsed' && 'opacity-0 hidden')}>
                            <span className='font-semibold text-sm'>{user.displayName || user.email}</span>
-                           <span className='text-xs text-muted-foreground'>View Profile</span>
+                           <span className='text-xs text-muted-foreground'>View Options</span>
                         </div>
                       </div>
                    </Button>
@@ -144,6 +149,30 @@ export function SideNav() {
                     <DropdownMenuItem asChild>
                          <Link href={settingsItem.href} onClick={handleLinkClick}><Settings className="mr-2 h-4 w-4" /><span>{settingsItem.label}</span></Link>
                     </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                     <DropdownMenuSub>
+                        <DropdownMenuSubTrigger>
+                            <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+                            <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+                            <span className="ml-2">Theme</span>
+                        </DropdownMenuSubTrigger>
+                        <DropdownMenuPortal>
+                            <DropdownMenuSubContent>
+                                <DropdownMenuItem onClick={() => setTheme("light")}>
+                                    <Sun className="mr-2 h-4 w-4" />
+                                    <span>Light</span>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => setTheme("dark")}>
+                                    <Moon className="mr-2 h-4 w-4" />
+                                    <span>Dark</span>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => setTheme("system")}>
+                                    <Monitor className="mr-2 h-4 w-4" />
+                                    <span>System</span>
+                                </DropdownMenuItem>
+                            </DropdownMenuSubContent>
+                        </DropdownMenuPortal>
+                    </DropdownMenuSub>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={handleSignOut}>
                         <LogOut className="mr-2 h-4 w-4" />
