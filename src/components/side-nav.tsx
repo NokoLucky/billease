@@ -69,6 +69,7 @@ export function SideNav() {
               isActive={pathname === item.href}
               tooltip={item.label}
               onClick={handleLinkClick}
+              className="text-base h-10 [&>svg]:size-5"
             >
               <item.icon />
               <span>{item.label}</span>
@@ -86,6 +87,7 @@ export function SideNav() {
                 isActive={pathname === settingsItem.href}
                 tooltip={settingsItem.label}
                 onClick={handleLinkClick}
+                className="text-base h-10 [&>svg]:size-5"
               >
                 <settingsItem.icon />
                 <span>{settingsItem.label}</span>
