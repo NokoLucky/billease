@@ -1,6 +1,7 @@
 
 'use client';
 
+import React from 'react';
 import { db, firebaseApp } from '@/lib/firebase';
 import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, where, Timestamp } from 'firebase/firestore';
 import type { Bill, BillInput } from './types';
