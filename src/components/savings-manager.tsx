@@ -1,38 +1,22 @@
 
 'use client';
 
-import React, { useState, useTransition, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
+import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { getSavingsTips, type SavingsTipsInput } from '@/ai/flows/savings-tips';
-import { PiggyBank, Sparkles, Loader2 } from 'lucide-react';
+import { PiggyBank, Loader2 } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import type { Bill } from '@/lib/types';
 import { useProfile } from '@/lib/firestore';
+import Link from 'next/link';
 
 export function SavingsManager({ bills }: { bills: Bill[] }) {
-    const { profile, loading: profileLoading, update } = useProfile();
-    const [tips, setTips] = useState<string | null>(null);
-    const [isPending, startTransition] = useTransition();
+    const { profile, loading: profileLoading } = useProfile();
 
-    const upcomingBills = bills.filter(b => !b.isPaid).map(b => ({ name: b.name, amount: b.amount }));
-    const totalBills = upcomingBills.reduce((acc, bill) => acc + bill.amount, 0);
+    const totalBills = bills.filter(b => !b.isPaid).reduce((acc, bill) => acc + bill.amount, 0);
     const leftoverFunds = (profile?.income || 0) - totalBills - (profile?.savingsGoal || 0);
-
-    const handleGetTips = () => {
-        if (!profile) return;
-        const input: SavingsTipsInput = {
-            income: profile.income,
-            upcomingBills,
-            savingsGoal: profile.savingsGoal,
-        };
-        startTransition(async () => {
-            const result = await getSavingsTips(input);
-            setTips(result.savingsTips);
-        });
-    };
 
     if (profileLoading) {
         return (
@@ -47,9 +31,6 @@ export function SavingsManager({ bills }: { bills: Bill[] }) {
                             <div className="h-10 bg-muted rounded animate-pulse" />
                             <div className="h-10 bg-muted rounded animate-pulse" />
                         </CardContent>
-                         <CardFooter>
-                            <div className="h-10 w-full bg-muted rounded animate-pulse" />
-                         </CardFooter>
                     </Card>
                 </div>
                  <div className="lg:col-span-2">
@@ -75,7 +56,7 @@ export function SavingsManager({ bills }: { bills: Bill[] }) {
                 <Card>
                     <CardHeader>
                         <CardTitle>Your Financials</CardTitle>
-                        <CardDescription>Adjust your monthly income and savings goal in Settings.</CardDescription>
+                        <CardDescription>You can adjust your monthly income and savings goal in settings.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <div className="space-y-2">
@@ -87,17 +68,11 @@ export function SavingsManager({ bills }: { bills: Bill[] }) {
                             <Input id="savings-goal" type="number" value={profile?.savingsGoal || 0} disabled />
                         </div>
                     </CardContent>
-                    <CardFooter>
-                         <Button onClick={handleGetTips} disabled={isPending || !profile} className="w-full">
-                            {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
-                            Get Savings Tips
-                        </Button>
-                    </CardFooter>
                 </Card>
                 <Card>
                     <CardHeader>
                         <CardTitle>Leftover Funds</CardTitle>
-                        <CardDescription>Estimated funds after bills and savings.</CardDescription>
+                        <CardDescription>Estimated funds after all upcoming bills and savings for this month.</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <p className={`text-3xl font-bold font-headline ${leftoverFunds < 0 ? 'text-destructive' : 'text-primary'}`}>
@@ -111,32 +86,15 @@ export function SavingsManager({ bills }: { bills: Bill[] }) {
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
                             <PiggyBank className="text-accent" />
-                            Smart Savings Tips
+                            Savings Tips
                         </CardTitle>
-                        <CardDescription>AI-powered suggestions to help you reach your goals.</CardDescription>
+                        <CardDescription>AI-powered suggestions are unavailable in the mobile app.</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        {isPending && (
-                             <div className="flex items-center justify-center h-48">
-                                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                             </div>
-                        )}
-                        {tips && !isPending && (
-                            <Alert>
-                                <Sparkles className="h-4 w-4" />
-                                <AlertTitle>Your Personalized Tips!</AlertTitle>
-                                <AlertDescription>
-                                    <div className="prose-sm max-w-none prose-p:my-2"
-                                         dangerouslySetInnerHTML={{ __html: tips.replace(/\n/g, '<br />') }} />
-                                </AlertDescription>
-                            </Alert>
-                        )}
-                        {!tips && !isPending && (
-                            <div className="flex flex-col items-center justify-center text-center rounded-lg h-48 bg-secondary/50 p-4">
-                                <p className="font-semibold">Ready for some advice?</p>
-                                <p className="text-sm text-muted-foreground">Confirm your income and savings goal, then click "Get Savings Tips" to see what our AI suggests.</p>
-                            </div>
-                        )}
+                        <div className="flex flex-col items-center justify-center text-center rounded-lg h-48 bg-secondary/50 p-4">
+                            <p className="font-semibold">AI Features Disabled</p>
+                            <p className="text-sm text-muted-foreground">To enable AI features like Savings Tips, you would need to deploy the Genkit flows as a separate cloud service and have the app make API calls to it.</p>
+                        </div>
                     </CardContent>
                 </Card>
             </div>
