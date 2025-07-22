@@ -22,8 +22,9 @@ export function DashboardOverview({ bills, loading: billsLoading }: DashboardOve
 
   const totalPaid = bills.filter(b => b.isPaid).reduce((acc, bill) => acc + bill.amount, 0);
   
-  const savingsProgress = profile && profile.savingsGoal > 0 
-    ? Math.max(0, ((profile.income - totalPaid) / profile.savingsGoal) * 100)
+  const fundsAfterBills = (profile?.income || 0) - totalUpcoming;
+  const savingsProgress = profile && profile.income > 0
+    ? Math.max(0, Math.min(100, (fundsAfterBills / profile.income) * 100))
     : 0;
   
   const loading = billsLoading || profileLoading;
@@ -92,7 +93,7 @@ export function DashboardOverview({ bills, loading: billsLoading }: DashboardOve
         <CardHeader>
             <CardTitle>Savings Goal Progress</CardTitle>
              <CardDescription>
-                You've saved R{profile ? (profile.income - totalPaid).toFixed(2) : '0.00'} of your R{profile ? profile.savingsGoal.toFixed(2) : '0.00'} goal.
+                You've achieved R{profile && fundsAfterBills > profile.savingsGoal ? profile.savingsGoal.toFixed(2) : Math.max(0, fundsAfterBills - (profile?.income || 0) + (profile?.savingsGoal || 0)).toFixed(2) } of your R{profile ? profile.savingsGoal.toFixed(2) : '0.00'} goal.
             </CardDescription>
         </CardHeader>
         <CardContent>
