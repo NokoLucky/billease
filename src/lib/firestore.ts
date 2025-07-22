@@ -33,9 +33,13 @@ export const addBill = async (userId: string, bill: BillInput) => {
     await addDoc(billsCollection, billWithTimestamp);
 };
 
-export const updateBill = async (userId: string, billId: string, updates: Partial<Bill>) => {
+export const updateBill = async (userId: string, billId: string, updates: Partial<Omit<Bill, 'id' | 'dueDate'> & { dueDate?: Date }>) => {
     const billDoc = doc(db, 'users', userId, 'bills', billId);
-    await updateDoc(billDoc, updates);
+    const updateData: { [key: string]: any } = { ...updates };
+    if (updates.dueDate) {
+        updateData.dueDate = Timestamp.fromDate(updates.dueDate);
+    }
+    await updateDoc(billDoc, updateData);
 };
 
 export const deleteBill = async (userId: string, billId: string) => {

@@ -22,7 +22,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Button } from './ui/button';
-import { ArrowUpDown, MoreHorizontal, Loader2, Trash2 } from 'lucide-react';
+import { ArrowUpDown, MoreHorizontal, Loader2, Trash2, Pencil } from 'lucide-react';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -48,6 +48,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { Skeleton } from './ui/skeleton';
+import { EditBillSheet } from './edit-bill-sheet';
 
 type BillsTableProps = {
     bills: Bill[];
@@ -62,6 +63,7 @@ export function BillsTable({ bills, loading, onBillUpdated }: BillsTableProps) {
     const { user } = useAuth();
     const { toast } = useToast();
     const [isPending, startTransition] = useTransition();
+    const [editingBill, setEditingBill] = useState<Bill | null>(null);
 
     const handleSort = (key: keyof Bill) => {
         let direction: 'asc' | 'desc' = 'asc';
@@ -139,6 +141,7 @@ export function BillsTable({ bills, loading, onBillUpdated }: BillsTableProps) {
     }
 
   return (
+    <>
     <div className="w-full">
         <div className="flex flex-col md:flex-row items-center gap-4 py-4">
             <Input
@@ -178,8 +181,11 @@ export function BillsTable({ bills, loading, onBillUpdated }: BillsTableProps) {
                                 <DropdownMenuItem onClick={() => handleTogglePaid(bill)}>
                                     {bill.isPaid ? 'Mark as Unpaid' : 'Mark as Paid'}
                                 </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => setEditingBill(bill)}>
+                                    <Pencil className="mr-2 h-4 w-4" />
+                                    Edit Bill
+                                </DropdownMenuItem>
                                 <DropdownMenuSeparator />
-                                <DropdownMenuItem>Edit Bill</DropdownMenuItem>
                                 <AlertDialog>
                                     <AlertDialogTrigger asChild>
                                         <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive focus:bg-destructive/10 focus:text-destructive">
@@ -285,8 +291,11 @@ export function BillsTable({ bills, loading, onBillUpdated }: BillsTableProps) {
                                         <DropdownMenuItem onClick={() => handleTogglePaid(bill)}>
                                             {bill.isPaid ? 'Mark as Unpaid' : 'Mark as Paid'}
                                         </DropdownMenuItem>
+                                         <DropdownMenuItem onClick={() => setEditingBill(bill)}>
+                                            <Pencil className="mr-2 h-4 w-4" />
+                                            Edit Bill
+                                        </DropdownMenuItem>
                                         <DropdownMenuSeparator />
-                                        <DropdownMenuItem>Edit Bill</DropdownMenuItem>
                                         <AlertDialog>
                                             <AlertDialogTrigger asChild>
                                                 <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive focus:bg-destructive/10 focus:text-destructive">
@@ -321,5 +330,17 @@ export function BillsTable({ bills, loading, onBillUpdated }: BillsTableProps) {
             </div>
         )}
     </div>
+    {editingBill && (
+        <EditBillSheet 
+            bill={editingBill}
+            isOpen={!!editingBill}
+            onOpenChange={(open) => !open && setEditingBill(null)}
+            onBillUpdated={() => {
+                setEditingBill(null);
+                onBillUpdated();
+            }}
+        />
+    )}
+    </>
   );
 }
