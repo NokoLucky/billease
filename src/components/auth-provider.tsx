@@ -1,13 +1,13 @@
 
 "use client";
 
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react';
 import { getAuth, onAuthStateChanged, User } from 'firebase/auth';
 import { firebaseApp } from '@/lib/firebase';
 import { usePathname, useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 
-const AuthContext = createContext<{ user: User | null; loading: boolean }>({ user: null, loading: true });
+const AuthContext = createContext<{ user: User | null; loading: boolean; refetchUser: () => Promise<void> }>({ user: null, loading: true, refetchUser: async () => {} });
 
 const AUTH_ROUTES = ['/auth/signin', '/auth/signup'];
 const PUBLIC_ROUTES = [...AUTH_ROUTES]; // Add any other public routes here
@@ -17,16 +17,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const [loading, setLoading] = useState(true);
     const pathname = usePathname();
     const router = useRouter();
+    const auth = getAuth(firebaseApp);
+
+    const refetchUser = useCallback(async () => {
+        await auth.currentUser?.reload();
+        const freshUser = auth.currentUser;
+        setUser(freshUser);
+    }, [auth]);
 
     useEffect(() => {
-        const auth = getAuth(firebaseApp);
         const unsubscribe = onAuthStateChanged(auth, (user) => {
             setUser(user);
             setLoading(false);
         });
 
         return () => unsubscribe();
-    }, []);
+    }, [auth]);
 
     useEffect(() => {
         if (loading) return;
@@ -52,7 +58,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     return (
-        <AuthContext.Provider value={{ user, loading }}>
+        <AuthContext.Provider value={{ user, loading, refetchUser }}>
             {children}
         </AuthContext.Provider>
     );
