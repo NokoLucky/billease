@@ -2,10 +2,10 @@
 'use client';
 
 import React, { useMemo } from 'react';
-import { Bar, BarChart, Pie, PieChart, Cell, XAxis, YAxis } from 'recharts';
+import { Bar, BarChart, Pie, PieChart, Cell, XAxis, YAxis, ResponsiveContainer } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from "@/components/ui/chart";
-import { eachMonthOfInterval, format, startOfYear, endOfYear, subMonths } from 'date-fns';
+import { eachMonthOfInterval, format, startOfYear, subMonths } from 'date-fns';
 import type { ChartConfig } from "@/components/ui/chart";
 import type { Bill } from '@/lib/types';
 
@@ -66,7 +66,7 @@ export function ReportsCharts({ bills }: { bills: Bill[] }) {
     }, [spendingByCategory]);
 
     return (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
             <Card>
                 <CardHeader>
                     <CardTitle>Bills Paid Over Time</CardTitle>
