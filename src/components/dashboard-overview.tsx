@@ -1,22 +1,32 @@
 
 "use client";
 
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { format } from 'date-fns';
 import type { Bill } from "@/lib/types";
 import { Skeleton } from "./ui/skeleton";
+import { useProfile } from "@/lib/firestore";
+import { Progress } from "./ui/progress";
 
 type DashboardOverviewProps = {
   bills: Bill[];
   loading: boolean;
 }
 
-export function DashboardOverview({ bills, loading }: DashboardOverviewProps) {
-  const upcomingBills = bills.filter(b => !b.isPaid && new Date(b.dueDate) >= new Date());
+export function DashboardOverview({ bills, loading: billsLoading }: DashboardOverviewProps) {
+  const { profile, loading: profileLoading } = useProfile();
   
+  const upcomingBills = bills.filter(b => !b.isPaid && new Date(b.dueDate) >= new Date());
   const nextDueBill = upcomingBills.length > 0 ? upcomingBills.sort((a,b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())[0] : null;
-
   const totalUpcoming = upcomingBills.reduce((acc, bill) => acc + bill.amount, 0);
+
+  const totalPaid = bills.filter(b => b.isPaid).reduce((acc, bill) => acc + bill.amount, 0);
+  
+  const savingsProgress = profile && profile.savingsGoal > 0 
+    ? Math.max(0, ((profile.income - totalPaid) / profile.savingsGoal) * 100)
+    : 0;
+  
+  const loading = billsLoading || profileLoading;
 
   if (loading) {
     return (
@@ -39,11 +49,14 @@ export function DashboardOverview({ bills, loading }: DashboardOverviewProps) {
             <Skeleton className="h-4 w-1/2" />
           </CardContent>
         </Card>
-        <Card className="flex items-center justify-center bg-primary/10 border-dashed" data-ai-hint="savings chart">
-          <div className="text-center">
-              <p className="font-semibold text-primary">Savings Goal Progress</p>
-              <p className="text-sm text-muted-foreground">Coming Soon</p>
-          </div>
+        <Card>
+           <CardHeader>
+            <CardTitle>Savings Goal</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Skeleton className="h-8 w-3/4 mb-2" />
+            <Skeleton className="h-4 w-1/2" />
+          </CardContent>
         </Card>
       </div>
     );
@@ -75,11 +88,17 @@ export function DashboardOverview({ bills, loading }: DashboardOverviewProps) {
           <p className="text-sm text-muted-foreground">{upcomingBills.length} bills remaining</p>
         </CardContent>
       </Card>
-      <Card className="flex items-center justify-center bg-primary/10 border-dashed" data-ai-hint="savings chart">
-        <div className="text-center">
-            <p className="font-semibold text-primary">Savings Goal Progress</p>
-            <p className="text-sm text-muted-foreground">Coming Soon</p>
-        </div>
+      <Card>
+        <CardHeader>
+            <CardTitle>Savings Goal Progress</CardTitle>
+             <CardDescription>
+                You've saved R{profile ? (profile.income - totalPaid).toFixed(2) : '0.00'} of your R{profile ? profile.savingsGoal.toFixed(2) : '0.00'} goal.
+            </CardDescription>
+        </CardHeader>
+        <CardContent>
+            <Progress value={savingsProgress} className="h-4" />
+            <p className="text-right text-sm text-muted-foreground mt-2">{savingsProgress.toFixed(0)}%</p>
+        </CardContent>
       </Card>
     </div>
   );

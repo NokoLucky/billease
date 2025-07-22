@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useState, useTransition } from 'react';
+import React, { useState, useTransition, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -10,22 +10,23 @@ import { getSavingsTips, type SavingsTipsInput } from '@/ai/flows/savings-tips';
 import { PiggyBank, Sparkles, Loader2 } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import type { Bill } from '@/lib/types';
+import { useProfile } from '@/lib/firestore';
 
 export function SavingsManager({ bills }: { bills: Bill[] }) {
-    const [income, setIncome] = useState(25000);
-    const [savingsGoal, setSavingsGoal] = useState(2500);
+    const { profile, loading: profileLoading, update } = useProfile();
     const [tips, setTips] = useState<string | null>(null);
     const [isPending, startTransition] = useTransition();
 
     const upcomingBills = bills.filter(b => !b.isPaid).map(b => ({ name: b.name, amount: b.amount }));
     const totalBills = upcomingBills.reduce((acc, bill) => acc + bill.amount, 0);
-    const leftoverFunds = income - totalBills - savingsGoal;
+    const leftoverFunds = (profile?.income || 0) - totalBills - (profile?.savingsGoal || 0);
 
     const handleGetTips = () => {
+        if (!profile) return;
         const input: SavingsTipsInput = {
-            income,
+            income: profile.income,
             upcomingBills,
-            savingsGoal,
+            savingsGoal: profile.savingsGoal,
         };
         startTransition(async () => {
             const result = await getSavingsTips(input);
@@ -33,26 +34,61 @@ export function SavingsManager({ bills }: { bills: Bill[] }) {
         });
     };
 
+    if (profileLoading) {
+        return (
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div className="lg:col-span-1 space-y-6">
+                    <Card>
+                        <CardHeader>
+                            <div className="h-6 w-3/4 bg-muted rounded animate-pulse" />
+                            <div className="h-4 w-1/2 bg-muted rounded animate-pulse" />
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <div className="h-10 bg-muted rounded animate-pulse" />
+                            <div className="h-10 bg-muted rounded animate-pulse" />
+                        </CardContent>
+                         <CardFooter>
+                            <div className="h-10 w-full bg-muted rounded animate-pulse" />
+                         </CardFooter>
+                    </Card>
+                </div>
+                 <div className="lg:col-span-2">
+                    <Card className="min-h-full">
+                         <CardHeader>
+                             <div className="h-6 w-1/2 bg-muted rounded animate-pulse" />
+                             <div className="h-4 w-3/4 bg-muted rounded animate-pulse" />
+                         </CardHeader>
+                         <CardContent>
+                             <div className="flex items-center justify-center h-48">
+                                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                             </div>
+                         </CardContent>
+                    </Card>
+                 </div>
+            </div>
+        )
+    }
+
     return (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-1 space-y-6">
                 <Card>
                     <CardHeader>
                         <CardTitle>Your Financials</CardTitle>
-                        <CardDescription>Adjust your monthly income and savings goal.</CardDescription>
+                        <CardDescription>Adjust your monthly income and savings goal in Settings.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <div className="space-y-2">
                             <Label htmlFor="income">Monthly Income</Label>
-                            <Input id="income" type="number" value={income} onChange={(e) => setIncome(Number(e.target.value))} />
+                            <Input id="income" type="number" value={profile?.income || 0} disabled />
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="savings-goal">Monthly Savings Goal</Label>
-                            <Input id="savings-goal" type="number" value={savingsGoal} onChange={(e) => setSavingsGoal(Number(e.target.value))} />
+                            <Input id="savings-goal" type="number" value={profile?.savingsGoal || 0} disabled />
                         </div>
                     </CardContent>
                     <CardFooter>
-                         <Button onClick={handleGetTips} disabled={isPending} className="w-full">
+                         <Button onClick={handleGetTips} disabled={isPending || !profile} className="w-full">
                             {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
                             Get Savings Tips
                         </Button>
@@ -98,7 +134,7 @@ export function SavingsManager({ bills }: { bills: Bill[] }) {
                         {!tips && !isPending && (
                             <div className="flex flex-col items-center justify-center text-center rounded-lg h-48 bg-secondary/50 p-4">
                                 <p className="font-semibold">Ready for some advice?</p>
-                                <p className="text-sm text-muted-foreground">Click "Get Savings Tips" to see what our AI suggests.</p>
+                                <p className="text-sm text-muted-foreground">Confirm your income and savings goal, then click "Get Savings Tips" to see what our AI suggests.</p>
                             </div>
                         )}
                     </CardContent>

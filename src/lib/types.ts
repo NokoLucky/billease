@@ -23,3 +23,9 @@ export interface Category {
   name: BillCategory;
   icon: LucideIcon;
 }
+
+export interface UserProfile {
+    income: number;
+    savingsGoal: number;
+    currency: string;
+}
