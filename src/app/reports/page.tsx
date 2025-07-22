@@ -46,7 +46,7 @@ export default function ReportsPage() {
     return (
         <div className="flex flex-col min-h-screen">
             <PageHeader title="Reports & History">
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                     <Button variant="outline" onClick={handleExportCSV} disabled={loading || bills.length === 0}>
                         <Download className="mr-2" />
                         Export CSV
