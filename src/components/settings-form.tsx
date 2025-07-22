@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useEffect, useState, useTransition } from 'react';
+import React, { useEffect, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -27,6 +27,11 @@ const settingsSchema = z.object({
   income: z.coerce.number().min(0, 'Income must be a positive number'),
   savingsGoal: z.coerce.number().min(0, 'Savings goal must be a positive number'),
   currency: z.string(),
+  notifications: z.object({
+    dueSoon: z.boolean(),
+    paidConfirmation: z.boolean(),
+    savingsTips: z.boolean(),
+  })
 });
 
 type SettingsFormValues = z.infer<typeof settingsSchema>;
@@ -42,6 +47,11 @@ export function SettingsForm() {
             income: 25000,
             savingsGoal: 2500,
             currency: 'ZAR',
+            notifications: {
+                dueSoon: true,
+                paidConfirmation: true,
+                savingsTips: false,
+            }
         }
     });
 
@@ -51,6 +61,7 @@ export function SettingsForm() {
                 income: profile.income,
                 savingsGoal: profile.savingsGoal,
                 currency: profile.currency,
+                notifications: profile.notifications || { dueSoon: true, paidConfirmation: true, savingsTips: false }
             });
         }
     }, [profile, form]);
@@ -154,18 +165,54 @@ export function SettingsForm() {
                     <CardDescription>Manage your notification preferences.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                    <div className="flex items-center justify-between p-4 border rounded-lg">
-                        <Label htmlFor="due-soon" className="font-medium">Bills Due Soon</Label>
-                        <Switch id="due-soon" defaultChecked />
-                    </div>
-                    <div className="flex items-center justify-between p-4 border rounded-lg">
-                        <Label htmlFor="bill-paid" className="font-medium">Bill Paid Confirmation</Label>
-                        <Switch id="bill-paid" defaultChecked />
-                    </div>
-                    <div className="flex items-center justify-between p-4 border rounded-lg">
-                        <Label htmlFor="savings-tips" className="font-medium">Weekly Savings Tips</Label>
-                        <Switch id="savings-tips" />
-                    </div>
+                    <FormField
+                        control={form.control}
+                        name="notifications.dueSoon"
+                        render={({ field }) => (
+                            <FormItem className="flex items-center justify-between p-4 border rounded-lg">
+                                <Label htmlFor="due-soon" className="font-medium">Bills Due Soon</Label>
+                                <FormControl>
+                                    <Switch
+                                        id="due-soon"
+                                        checked={field.value}
+                                        onCheckedChange={field.onChange}
+                                    />
+                                </FormControl>
+                            </FormItem>
+                        )}
+                    />
+                     <FormField
+                        control={form.control}
+                        name="notifications.paidConfirmation"
+                        render={({ field }) => (
+                            <FormItem className="flex items-center justify-between p-4 border rounded-lg">
+                                <Label htmlFor="bill-paid" className="font-medium">Bill Paid Confirmation</Label>
+                                 <FormControl>
+                                    <Switch
+                                        id="bill-paid"
+                                        checked={field.value}
+                                        onCheckedChange={field.onChange}
+                                    />
+                                </FormControl>
+                            </FormItem>
+                        )}
+                    />
+                    <FormField
+                        control={form.control}
+                        name="notifications.savingsTips"
+                        render={({ field }) => (
+                            <FormItem className="flex items-center justify-between p-4 border rounded-lg">
+                                <Label htmlFor="savings-tips" className="font-medium">Weekly Savings Tips</Label>
+                                 <FormControl>
+                                    <Switch
+                                        id="savings-tips"
+                                        checked={field.value}
+                                        onCheckedChange={field.onChange}
+                                    />
+                                </FormControl>
+                            </FormItem>
+                        )}
+                    />
                 </CardContent>
             </Card>
 

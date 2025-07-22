@@ -56,10 +56,24 @@ const getProfileDoc = (userId: string) => {
 export const getUserProfile = async (userId: string): Promise<UserProfile> => {
     const profileDoc = await getDoc(getProfileDoc(userId));
     if (profileDoc.exists()) {
-        return profileDoc.data() as UserProfile;
+        const data = profileDoc.data() as UserProfile;
+        // Ensure notifications object exists
+        if (!data.notifications) {
+            data.notifications = { dueSoon: true, paidConfirmation: true, savingsTips: false };
+        }
+        return data;
     }
     // Return default profile if none exists
-    return { income: 25000, savingsGoal: 2500, currency: 'ZAR' };
+    return { 
+        income: 25000, 
+        savingsGoal: 2500, 
+        currency: 'ZAR',
+        notifications: {
+            dueSoon: true,
+            paidConfirmation: true,
+            savingsTips: false,
+        }
+    };
 }
 
 export const updateUserProfile = async (userId: string, updates: Partial<UserProfile>) => {

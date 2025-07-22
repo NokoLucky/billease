@@ -28,4 +28,9 @@ export interface UserProfile {
     income: number;
     savingsGoal: number;
     currency: string;
+    notifications: {
+        dueSoon: boolean;
+        paidConfirmation: boolean;
+        savingsTips: boolean;
+    }
 }
