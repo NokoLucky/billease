@@ -32,5 +32,6 @@ export interface UserProfile {
         dueSoon: boolean;
         paidConfirmation: boolean;
         savingsTips: boolean;
-    }
+    };
+    fcmTokens?: string[]; // Array to store device tokens for push notifications
 }

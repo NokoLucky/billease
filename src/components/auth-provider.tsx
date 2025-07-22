@@ -6,6 +6,10 @@ import { getAuth, onAuthStateChanged, User } from 'firebase/auth';
 import { firebaseApp } from '@/lib/firebase';
 import { usePathname, useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
+import { Capacitor } from '@capacitor/core';
+import { PushNotifications } from '@capacitor/push-notifications';
+import { updateUserProfile, getUserProfile } from '@/lib/firestore';
+import { useToast } from '@/hooks/use-toast';
 
 const AuthContext = createContext<{ user: User | null; loading: boolean; refetchUser: () => Promise<void> }>({ user: null, loading: true, refetchUser: async () => {} });
 
@@ -18,6 +22,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const pathname = usePathname();
     const router = useRouter();
     const auth = getAuth(firebaseApp);
+    const { toast } = useToast();
 
     const refetchUser = useCallback(async () => {
         await auth.currentUser?.reload();
@@ -25,14 +30,60 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(freshUser);
     }, [auth]);
 
+    // Function to register for push notifications
+    const registerForPushNotifications = useCallback(async (currentUser: User) => {
+        if (!Capacitor.isPluginAvailable('PushNotifications')) {
+            console.log('Push notifications not available');
+            return;
+        }
+
+        try {
+            let permStatus = await PushNotifications.checkPermissions();
+            if (permStatus.receive === 'prompt') {
+                permStatus = await PushNotifications.requestPermissions();
+            }
+            if (permStatus.receive !== 'granted') {
+                toast({ variant: 'destructive', title: 'Permission denied', description: 'You will not receive push notifications.' });
+                return;
+            }
+
+            // Register with FCM
+            await PushNotifications.register();
+
+            // On success, we should be able to get the token
+            PushNotifications.addListener('registration', async (token) => {
+                console.log('Push registration success, token:', token.value);
+                // Save the token to the user's profile
+                const profile = await getUserProfile(currentUser.uid);
+                const currentTokens = profile.fcmTokens || [];
+                if (!currentTokens.includes(token.value)) {
+                    await updateUserProfile(currentUser.uid, { fcmTokens: [...currentTokens, token.value] });
+                    console.log('FCM token saved successfully');
+                }
+            });
+
+            PushNotifications.addListener('registrationError', (error) => {
+                console.error('Error on registration:', error);
+                 toast({ variant: 'destructive', title: 'Push Notification Error', description: `Could not register for notifications: ${error.error}` });
+            });
+            
+        } catch(e) {
+            console.error('Error in push notification setup', e);
+        }
+
+    }, [toast]);
+    
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (user) => {
             setUser(user);
             setLoading(false);
+            if (user && Capacitor.isNativePlatform()) {
+                registerForPushNotifications(user);
+            }
         });
 
         return () => unsubscribe();
-    }, [auth]);
+    }, [auth, registerForPushNotifications]);
 
     useEffect(() => {
         if (loading) return;
