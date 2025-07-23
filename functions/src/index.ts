@@ -3,6 +3,9 @@ import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 import { genkit, z } from "genkit";
 import { googleAI } from "@genkit-ai/googleai";
+import * as cors from "cors";
+
+const corsHandler = cors({ origin: true });
 
 // Initialize Firebase Admin SDK
 admin.initializeApp();
@@ -30,23 +33,36 @@ const savingsPrompt = ai.definePrompt({
 });
 
 // HTTP-triggered function to get savings tips
-export const getSavingsTips = functions.https.onCall(async (data, context) => {
-    // Validate input
-    const inputParse = SavingsTipsInputSchema.safeParse(data);
-    if (!inputParse.success) {
-        throw new functions.https.HttpsError('invalid-argument', 'The function must be called with a valid input.');
-    }
-
-    try {
-        const { output } = await savingsPrompt(inputParse.data);
-        if (!output) {
-            throw new functions.https.HttpsError('internal', 'Failed to generate savings tip.');
+export const getSavingsTips = functions.https.onRequest((req, res) => {
+    corsHandler(req, res, async () => {
+        if (req.method !== 'POST') {
+            res.status(405).send('Method Not Allowed');
+            return;
         }
-        return output;
-    } catch (error) {
-        console.error("Error generating savings tip:", error);
-        throw new functions.https.HttpsError('internal', 'An unexpected error occurred while generating the tip.');
-    }
+
+        const inputParse = SavingsTipsInputSchema.safeParse(req.body);
+        if (!inputParse.success) {
+            res.status(400).json({
+                error: {
+                    message: 'Invalid request body.',
+                    details: inputParse.error.format(),
+                },
+            });
+            return;
+        }
+
+        try {
+            const { output } = await savingsPrompt(inputParse.data);
+            if (!output) {
+                res.status(500).json({ error: { message: 'Failed to generate savings tip.' } });
+                return;
+            }
+            res.status(200).json(output);
+        } catch (error) {
+            console.error("Error generating savings tip:", error);
+            res.status(500).json({ error: { message: 'An unexpected error occurred.' } });
+        }
+    });
 });
 
 

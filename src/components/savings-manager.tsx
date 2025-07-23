@@ -1,22 +1,71 @@
 
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { PiggyBank, Loader2 } from 'lucide-react';
+import { PiggyBank, Loader2, RefreshCw } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import type { Bill } from '@/lib/types';
 import { useProfile } from '@/lib/firestore';
-import Link from 'next/link';
+import { useAuth } from './auth-provider';
 
 export function SavingsManager({ bills }: { bills: Bill[] }) {
     const { profile, loading: profileLoading } = useProfile();
+    const { user } = useAuth();
+    const [tip, setTip] = useState('');
+    const [tipLoading, setTipLoading] = useState(false);
+    const [tipError, setTipError] = useState('');
 
     const totalBills = bills.filter(b => !b.isPaid).reduce((acc, bill) => acc + bill.amount, 0);
     const leftoverFunds = (profile?.income || 0) - totalBills - (profile?.savingsGoal || 0);
+
+    const getTip = async () => {
+        if (!user || !profile) return;
+        setTipLoading(true);
+        setTipError('');
+        try {
+            // IMPORTANT: Replace with your actual deployed function URL
+            const functionUrl = `https://us-central1-${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}.cloudfunctions.net/getSavingsTips`;
+            
+            const idToken = await user.getIdToken();
+
+            const response = await fetch(functionUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${idToken}`
+                },
+                body: JSON.stringify({
+                    leftoverFunds: leftoverFunds,
+                    currency: profile.currency,
+                })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error?.message || 'Failed to fetch savings tip');
+            }
+
+            const data = await response.json();
+            setTip(data.tip);
+        } catch (error: any) {
+            console.error(error);
+            setTipError(error.message || 'An unexpected error occurred.');
+        } finally {
+            setTipLoading(false);
+        }
+    };
+    
+    useEffect(() => {
+        if (profile && user) {
+            getTip();
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [profile, user]);
+
 
     if (profileLoading) {
         return (
@@ -84,16 +133,29 @@ export function SavingsManager({ bills }: { bills: Bill[] }) {
             <div className="lg:col-span-2">
                 <Card className="min-h-full">
                     <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                            <PiggyBank className="text-accent" />
-                            Savings Tips
+                        <CardTitle className="flex items-center justify-between">
+                            <div className='flex items-center gap-2'>
+                                <PiggyBank className="text-accent" />
+                                Savings Tip
+                            </div>
+                            <Button variant="ghost" size="icon" onClick={getTip} disabled={tipLoading}>
+                                <RefreshCw className={cn("h-4 w-4", tipLoading && "animate-spin")} />
+                            </Button>
                         </CardTitle>
-                        <CardDescription>AI-powered suggestions are unavailable in the mobile app.</CardDescription>
+                        <CardDescription>AI-powered suggestions to help you save.</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <div className="flex flex-col items-center justify-center text-center rounded-lg h-48 bg-secondary/50 p-4">
-                            <p className="font-semibold">AI Features Disabled</p>
-                            <p className="text-sm text-muted-foreground">To enable AI features like Savings Tips, you would need to deploy the Genkit flows as a separate cloud service and have the app make API calls to it.</p>
+                        <div className="flex flex-col items-center justify-center text-center rounded-lg min-h-48 bg-secondary/50 p-4">
+                           {tipLoading ? (
+                                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                           ) : tipError ? (
+                                <Alert variant="destructive">
+                                    <AlertTitle>Error</AlertTitle>
+                                    <AlertDescription>{tipError}</AlertDescription>
+                                </Alert>
+                           ) : (
+                               <p className="font-semibold text-lg">{tip}</p>
+                           )}
                         </div>
                     </CardContent>
                 </Card>
@@ -101,3 +163,4 @@ export function SavingsManager({ bills }: { bills: Bill[] }) {
         </div>
     );
 }
+
