@@ -7,7 +7,7 @@ import { firebaseApp } from '@/lib/firebase';
 import { usePathname, useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { Capacitor } from '@capacitor/core';
-import { PushNotifications } from '@capacitor/push-notifications';
+import { PushNotifications, Token } from '@capacitor/push-notifications';
 import { updateUserProfile, getUserProfile } from '@/lib/firestore';
 import { useToast } from '@/hooks/use-toast';
 
@@ -38,6 +38,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
 
         try {
+            // Clean up any old listeners to prevent memory leaks
+            PushNotifications.removeAllListeners().then(() => {
+                 // Add new listeners
+                PushNotifications.addListener('registration', async (token: Token) => {
+                    console.log('Push registration success, token:', token.value);
+                    try {
+                        const profile = await getUserProfile(currentUser.uid);
+                        const currentTokens = profile.fcmTokens || [];
+                        if (!currentTokens.includes(token.value)) {
+                            await updateUserProfile(currentUser.uid, { fcmTokens: [...currentTokens, token.value] });
+                            console.log('FCM token saved successfully');
+                        }
+                    } catch (e) {
+                         console.error('Error saving FCM token:', e);
+                    }
+                });
+
+                PushNotifications.addListener('registrationError', (error: any) => {
+                    console.error('Error on registration:', error);
+                    toast({ variant: 'destructive', title: 'Push Notification Error', description: `Could not register for notifications: ${error.error}` });
+                });
+            });
+
             let permStatus = await PushNotifications.checkPermissions();
             if (permStatus.receive === 'prompt') {
                 permStatus = await PushNotifications.requestPermissions();
@@ -47,25 +70,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 return;
             }
 
-            // Register with FCM
+            // Now, register with FCM
             await PushNotifications.register();
-
-            // On success, we should be able to get the token
-            PushNotifications.addListener('registration', async (token) => {
-                console.log('Push registration success, token:', token.value);
-                // Save the token to the user's profile
-                const profile = await getUserProfile(currentUser.uid);
-                const currentTokens = profile.fcmTokens || [];
-                if (!currentTokens.includes(token.value)) {
-                    await updateUserProfile(currentUser.uid, { fcmTokens: [...currentTokens, token.value] });
-                    console.log('FCM token saved successfully');
-                }
-            });
-
-            PushNotifications.addListener('registrationError', (error) => {
-                console.error('Error on registration:', error);
-                 toast({ variant: 'destructive', title: 'Push Notification Error', description: `Could not register for notifications: ${error.error}` });
-            });
             
         } catch(e) {
             console.error('Error in push notification setup', e);
