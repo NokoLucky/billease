@@ -1,5 +1,6 @@
 
 import { initializeApp, getApp, getApps } from 'firebase/app';
+import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 
 const firebaseConfig = {
@@ -11,6 +12,14 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-// Initialize Firebase
-export const firebaseApp = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+// Initialize Firebase for client-side
+const getClientFirebaseApp = () => {
+    if (getApps().length) {
+        return getApp();
+    }
+    return initializeApp(firebaseConfig);
+}
+
+export const firebaseApp = getClientFirebaseApp();
+export const auth = getAuth(firebaseApp);
 export const db = getFirestore(firebaseApp);

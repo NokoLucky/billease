@@ -2,10 +2,10 @@
 'use client';
 
 import React from 'react';
-import { db, firebaseApp } from '@/lib/firebase';
+import { db, auth } from '@/lib/firebase';
 import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc, Timestamp, setDoc, getDoc } from 'firebase/firestore';
 import type { Bill, BillInput, UserProfile } from './types';
-import { getAuth } from 'firebase/auth';
+import { useAuth } from '@/components/auth-provider';
 
 // Bills functions
 const getBillsCollection = (userId: string) => {
@@ -82,12 +82,11 @@ export const updateUserProfile = async (userId: string, updates: Partial<UserPro
 
 // Hooks
 export const useBills = () => {
+    const { user } = useAuth();
     const [bills, setBills] = React.useState<Bill[]>([]);
     const [loading, setLoading] = React.useState(true);
     const [error, setError] = React.useState<Error | null>(null);
-    const auth = getAuth(firebaseApp);
-    const user = auth.currentUser;
-
+    
     const refetch = React.useCallback(async () => {
         if (!user) {
             setBills([]);
@@ -106,18 +105,21 @@ export const useBills = () => {
     }, [user]);
 
     React.useEffect(() => {
-        refetch();
-    }, [refetch]);
+        if (user) {
+            refetch();
+        } else {
+            setLoading(false);
+        }
+    }, [user, refetch]);
 
     return { bills, loading, error, refetch };
 }
 
 export const useProfile = () => {
+    const { user } = useAuth();
     const [profile, setProfile] = React.useState<UserProfile | null>(null);
     const [loading, setLoading] = React.useState(true);
     const [error, setError] = React.useState<Error | null>(null);
-    const auth = getAuth(firebaseApp);
-    const user = auth.currentUser;
 
     const refetch = React.useCallback(async () => {
         if (!user) {
@@ -139,12 +141,16 @@ export const useProfile = () => {
     const update = async (updates: Partial<UserProfile>) => {
         if (!user) return;
         await updateUserProfile(user.uid, updates);
-        refetch();
+        await refetch();
     }
 
     React.useEffect(() => {
-        refetch();
-    }, [refetch]);
+        if (user) {
+            refetch();
+        } else {
+            setLoading(false);
+        }
+    }, [user, refetch]);
 
     return { profile, loading, error, refetch, update };
 }

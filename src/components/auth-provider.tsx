@@ -2,8 +2,9 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react';
-import { getAuth, onAuthStateChanged, User } from 'firebase/auth';
-import { firebaseApp } from '@/lib/firebase';
+import { User } from 'firebase/auth';
+import { auth } from '@/lib/firebase';
+import { onAuthStateChanged } from 'firebase/auth';
 import { usePathname, useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { Capacitor } from '@capacitor/core';
@@ -21,56 +22,54 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const [loading, setLoading] = useState(true);
     const pathname = usePathname();
     const router = useRouter();
-    const auth = getAuth(firebaseApp);
     const { toast } = useToast();
 
     const refetchUser = useCallback(async () => {
         await auth.currentUser?.reload();
         const freshUser = auth.currentUser;
         setUser(freshUser);
-    }, [auth]);
+    }, []);
 
     // Function to register for push notifications
     const registerForPushNotifications = useCallback(async (currentUser: User) => {
         if (!Capacitor.isPluginAvailable('PushNotifications')) {
-            console.log('Push notifications not available');
+            console.log('Push notifications not available on this platform.');
             return;
         }
 
         try {
-            // Clean up any old listeners to prevent memory leaks
-            PushNotifications.removeAllListeners().then(() => {
-                 // Add new listeners
-                PushNotifications.addListener('registration', async (token: Token) => {
-                    console.log('Push registration success, token:', token.value);
-                    try {
-                        const profile = await getUserProfile(currentUser.uid);
-                        const currentTokens = profile.fcmTokens || [];
-                        if (!currentTokens.includes(token.value)) {
-                            await updateUserProfile(currentUser.uid, { fcmTokens: [...currentTokens, token.value] });
-                            console.log('FCM token saved successfully');
-                        }
-                    } catch (e) {
-                         console.error('Error saving FCM token:', e);
-                    }
-                });
+            await PushNotifications.removeAllListeners();
 
-                PushNotifications.addListener('registrationError', (error: any) => {
-                    console.error('Error on registration:', error);
-                    toast({ variant: 'destructive', title: 'Push Notification Error', description: `Could not register for notifications: ${error.error}` });
-                });
+            PushNotifications.addListener('registration', async (token: Token) => {
+                console.log('Push registration success, token:', token.value);
+                try {
+                    const profile = await getUserProfile(currentUser.uid);
+                    const currentTokens = profile.fcmTokens || [];
+                    if (!currentTokens.includes(token.value)) {
+                        await updateUserProfile(currentUser.uid, { fcmTokens: [...currentTokens, token.value] });
+                        console.log('FCM token saved successfully');
+                    }
+                } catch (e) {
+                     console.error('Error saving FCM token:', e);
+                }
+            });
+
+            PushNotifications.addListener('registrationError', (error: any) => {
+                console.error('Error on registration:', error);
+                toast({ variant: 'destructive', title: 'Push Notification Error', description: `Could not register for notifications: ${error.error}` });
             });
 
             let permStatus = await PushNotifications.checkPermissions();
+
             if (permStatus.receive === 'prompt') {
                 permStatus = await PushNotifications.requestPermissions();
             }
+
             if (permStatus.receive !== 'granted') {
-                toast({ variant: 'destructive', title: 'Permission denied', description: 'You will not receive push notifications.' });
+                toast({ variant: 'destructive', title: 'Permission Denied', description: 'You will not receive push notifications.' });
                 return;
             }
 
-            // Now, register with FCM
             await PushNotifications.register();
             
         } catch(e) {
@@ -89,7 +88,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         });
 
         return () => unsubscribe();
-    }, [auth, registerForPushNotifications]);
+    }, [registerForPushNotifications]);
 
     useEffect(() => {
         if (loading) return;

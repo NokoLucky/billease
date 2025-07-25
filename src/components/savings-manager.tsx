@@ -11,6 +11,8 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import type { Bill } from '@/lib/types';
 import { useProfile } from '@/lib/firestore';
 import { useAuth } from './auth-provider';
+import { cn } from '@/lib/utils';
+import { Skeleton } from './ui/skeleton';
 
 export function SavingsManager({ bills }: { bills: Bill[] }) {
     const { profile, loading: profileLoading } = useProfile();
@@ -23,11 +25,10 @@ export function SavingsManager({ bills }: { bills: Bill[] }) {
     const leftoverFunds = (profile?.income || 0) - totalBills - (profile?.savingsGoal || 0);
 
     const getTip = useCallback(async () => {
-        if (!user || !profile) return;
+        if (!user || !profile || !process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID) return;
         setTipLoading(true);
         setTipError('');
         try {
-            // IMPORTANT: Replace with your actual deployed function URL
             const functionUrl = `https://us-central1-${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}.cloudfunctions.net/getSavingsTips`;
             
             const idToken = await user.getIdToken();
@@ -60,11 +61,10 @@ export function SavingsManager({ bills }: { bills: Bill[] }) {
     }, [user, profile, leftoverFunds]);
     
     useEffect(() => {
-        // Ensure this only runs on the client after user and profile are loaded
-        if (profile && user) {
+        if (user && profile) {
             getTip();
         }
-    }, [profile, user, getTip]);
+    }, [user, profile, getTip]);
 
 
     if (profileLoading) {
@@ -73,20 +73,20 @@ export function SavingsManager({ bills }: { bills: Bill[] }) {
                 <div className="lg:col-span-1 space-y-6">
                     <Card>
                         <CardHeader>
-                            <div className="h-6 w-3/4 bg-muted rounded animate-pulse" />
-                            <div className="h-4 w-1/2 bg-muted rounded animate-pulse" />
+                            <Skeleton className="h-6 w-3/4" />
+                            <Skeleton className="h-4 w-1/2" />
                         </CardHeader>
                         <CardContent className="space-y-4">
-                            <div className="h-10 bg-muted rounded animate-pulse" />
-                            <div className="h-10 bg-muted rounded animate-pulse" />
+                            <Skeleton className="h-10 w-full" />
+                            <Skeleton className="h-10 w-full" />
                         </CardContent>
                     </Card>
                 </div>
                  <div className="lg:col-span-2">
                     <Card className="min-h-full">
                          <CardHeader>
-                             <div className="h-6 w-1/2 bg-muted rounded animate-pulse" />
-                             <div className="h-4 w-3/4 bg-muted rounded animate-pulse" />
+                             <Skeleton className="h-6 w-1/2" />
+                             <Skeleton className="h-4 w-3/4" />
                          </CardHeader>
                          <CardContent>
                              <div className="flex items-center justify-center h-48">
@@ -125,7 +125,7 @@ export function SavingsManager({ bills }: { bills: Bill[] }) {
                     </CardHeader>
                     <CardContent>
                         <p className={`text-3xl font-bold font-headline ${leftoverFunds < 0 ? 'text-destructive' : 'text-primary'}`}>
-                            R{leftoverFunds.toFixed(2)}
+                           R{leftoverFunds.toFixed(2)}
                         </p>
                     </CardContent>
                 </Card>
