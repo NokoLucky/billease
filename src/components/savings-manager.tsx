@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -22,7 +22,7 @@ export function SavingsManager({ bills }: { bills: Bill[] }) {
     const totalBills = bills.filter(b => !b.isPaid).reduce((acc, bill) => acc + bill.amount, 0);
     const leftoverFunds = (profile?.income || 0) - totalBills - (profile?.savingsGoal || 0);
 
-    const getTip = async () => {
+    const getTip = useCallback(async () => {
         if (!user || !profile) return;
         setTipLoading(true);
         setTipError('');
@@ -57,14 +57,14 @@ export function SavingsManager({ bills }: { bills: Bill[] }) {
         } finally {
             setTipLoading(false);
         }
-    };
+    }, [user, profile, leftoverFunds]);
     
     useEffect(() => {
+        // Ensure this only runs on the client after user and profile are loaded
         if (profile && user) {
             getTip();
         }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [profile, user]);
+    }, [profile, user, getTip]);
 
 
     if (profileLoading) {
@@ -163,4 +163,3 @@ export function SavingsManager({ bills }: { bills: Bill[] }) {
         </div>
     );
 }
-
