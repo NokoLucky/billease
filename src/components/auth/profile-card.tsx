@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/components/auth-provider';
 import { getAuth, signOut, updateProfile } from 'firebase/auth';
-import { firebaseApp } from '@/lib/firebase';
+import { app } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { LogOut, Save } from 'lucide-react';
@@ -46,14 +46,14 @@ export function ProfileCard() {
   const { isSubmitting } = form.formState;
 
   const handleSignOut = async () => {
-    const auth = getAuth(firebaseApp);
+    const auth = getAuth(app);
     await signOut(auth);
     router.push('/auth/signin');
   };
 
   const onSubmit = async (values: ProfileFormValues) => {
     if (!user) return;
-    const auth = getAuth(firebaseApp);
+    const auth = getAuth(app);
     if (!auth.currentUser) return;
     
     try {

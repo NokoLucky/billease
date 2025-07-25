@@ -14,7 +14,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { firebaseApp } from '@/lib/firebase';
+import { app } from '@/lib/firebase';
 import { Loader2 } from 'lucide-react';
 
 const formSchema = z.object({
@@ -37,7 +37,7 @@ export function SignUpForm() {
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsLoading(true);
-    const auth = getAuth(firebaseApp);
+    const auth = getAuth(app);
     try {
       await createUserWithEmailAndPassword(auth, values.email, values.password);
       router.push('/');

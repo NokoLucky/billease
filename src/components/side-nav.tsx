@@ -20,7 +20,7 @@ import {
   Monitor,
 } from 'lucide-react';
 import { getAuth, signOut } from 'firebase/auth';
-import { firebaseApp } from '@/lib/firebase';
+import { app as firebaseApp } from '@/lib/firebase';
 import { cn } from '@/lib/utils';
 import { useAuth } from './auth-provider';
 import {

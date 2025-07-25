@@ -2,7 +2,7 @@
 'use client';
 
 import React from 'react';
-import { db, auth } from '@/lib/firebase';
+import { db } from '@/lib/firebase';
 import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc, Timestamp, setDoc, getDoc } from 'firebase/firestore';
 import type { Bill, BillInput, UserProfile } from './types';
 import { useAuth } from '@/components/auth-provider';

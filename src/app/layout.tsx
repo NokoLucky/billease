@@ -2,11 +2,9 @@
 import type {Metadata} from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
-import { SideNav } from '@/components/side-nav';
-import { SidebarProvider, Sidebar, SidebarInset } from '@/components/ui/sidebar';
 import { cn } from '@/lib/utils';
-import { AuthProvider } from '@/components/auth-provider';
-import { ThemeProvider } from '@/components/theme-provider';
+import { MainLayout } from '@/components/main-layout';
+
 
 export const metadata: Metadata = {
   title: 'BillEase',
@@ -25,25 +23,11 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=PT+Sans&display=swap" rel="stylesheet" />
       </head>
-      <body className={cn("font-body antialiased pt-8")}>
-        <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-        >
-            <AuthProvider>
-                <SidebarProvider>
-                    <Sidebar>
-                        <SideNav />
-                    </Sidebar>
-                    <SidebarInset>
-                        {children}
-                    </SidebarInset>
-                </SidebarProvider>
-            </AuthProvider>
-            <Toaster />
-        </ThemeProvider>
+      <body className={cn("font-body antialiased pt-8 md:pt-0")}>
+        <MainLayout>
+          {children}
+        </MainLayout>
+        <Toaster />
       </body>
     </html>
   );
