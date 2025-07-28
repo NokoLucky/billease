@@ -32,59 +32,50 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Function to register for push notifications
     const registerForPushNotifications = useCallback(async (currentUser: User) => {
-        if (!Capacitor.isPluginAvailable('PushNotifications')) {
-            console.log('Push notifications not available on this platform.');
-            return;
-        }
-
-        try {
-            await PushNotifications.removeAllListeners();
-
-            PushNotifications.addListener('registration', async (token: Token) => {
-                console.log('Push registration success, token:', token.value);
-                try {
-                    const profile = await getUserProfile(currentUser.uid);
-                    const currentTokens = profile.fcmTokens || [];
-                    if (!currentTokens.includes(token.value)) {
-                        await updateUserProfile(currentUser.uid, { fcmTokens: [...currentTokens, token.value] });
-                        console.log('FCM token saved successfully');
-                    }
-                } catch (e) {
-                     console.error('Error saving FCM token:', e);
-                }
-            });
-
-            PushNotifications.addListener('registrationError', (error: any) => {
-                console.error('Error on registration:', error);
-                toast({ variant: 'destructive', title: 'Push Notification Error', description: `Could not register for notifications: ${error.error}` });
-            });
-
-            let permStatus = await PushNotifications.checkPermissions();
-
-            if (permStatus.receive === 'prompt') {
-                permStatus = await PushNotifications.requestPermissions();
-            }
-
-            if (permStatus.receive !== 'granted') {
-                toast({ variant: 'destructive', title: 'Permission Denied', description: 'You will not receive push notifications.' });
-                return;
-            }
-
-            await PushNotifications.register();
-            
-        } catch(e) {
-            console.error('Error in push notification setup', e);
-        }
-
+        // if (!Capacitor.isPluginAvailable('PushNotifications')) {
+        //     console.log('Push notifications not available on this platform.');
+        //     return;
+        // }
+        // try {
+        //     await PushNotifications.removeAllListeners();
+        //     await PushNotifications.addListener('registration', async (token: Token) => {
+        //         console.log('Push registration success, token:', token.value);
+        //         try {
+        //             const profile = await getUserProfile(currentUser.uid);
+        //             const currentTokens = profile.fcmTokens || [];
+        //             if (!currentTokens.includes(token.value)) {
+        //                 await updateUserProfile(currentUser.uid, { fcmTokens: [...currentTokens, token.value] });
+        //                 console.log('FCM token saved successfully');
+        //             }
+        //         } catch (e) {
+        //              console.error('Error saving FCM token:', e);
+        //         }
+        //     });
+        //     await PushNotifications.addListener('registrationError', (error: any) => {
+        //         console.error('Error on registration:', error);
+        //         toast({ variant: 'destructive', title: 'Push Notification Error', description: `Could not register for notifications: ${error.error}` });
+        //     });
+        //     let permStatus = await PushNotifications.checkPermissions();
+        //     if (permStatus.receive === 'prompt') {
+        //         permStatus = await PushNotifications.requestPermissions();
+        //     }
+        //     if (permStatus.receive !== 'granted') {
+        //         toast({ variant: 'destructive', title: 'Permission Denied', description: 'You will not receive push notifications.' });
+        //         return;
+        //     }
+        //     await PushNotifications.register();
+        // } catch(e) {
+        //     console.error('Error in push notification setup', e);
+        // }
     }, [toast]);
     
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (user) => {
             setUser(user);
             setLoading(false);
-            if (user && Capacitor.isNativePlatform()) {
-                registerForPushNotifications(user);
-            }
+            // if (user && Capacitor.isNativePlatform()) {
+            //     registerForPushNotifications(user);
+            // }
         });
 
         return () => unsubscribe();
