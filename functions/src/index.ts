@@ -33,7 +33,7 @@ const savingsPrompt = ai.definePrompt({
 });
 
 // HTTP-triggered function to get savings tips
-export const getSavingsTips = functions.https.onRequest((req, res) => {
+export const generateSavingsTip = functions.https.onRequest((req, res) => {
     corsHandler(req, res, async () => {
         if (req.method !== 'POST') {
             res.status(405).send('Method Not Allowed');

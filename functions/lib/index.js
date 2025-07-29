@@ -32,14 +32,17 @@ var __importStar = (this && this.__importStar) || (function () {
         return result;
     };
 })();
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.checkDueBills = exports.getSavingsTips = void 0;
 const functions = __importStar(require("firebase-functions"));
 const admin = __importStar(require("firebase-admin"));
 const genkit_1 = require("genkit");
 const googleai_1 = require("@genkit-ai/googleai");
-const cors = __importStar(require("cors"));
-const corsHandler = cors({ origin: true });
+const cors_1 = __importDefault(require("cors"));
+const corsHandler = (0, cors_1.default)({ origin: true });
 // Initialize Firebase Admin SDK
 admin.initializeApp();
 // Initialize Genkit

@@ -29,7 +29,7 @@ export function SavingsManager({ bills }: { bills: Bill[] }) {
         setTipLoading(true);
         setTipError('');
         try {
-            const functionUrl = `https://us-central1-${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}.cloudfunctions.net/getSavingsTips`;
+            const functionUrl = `https://us-central1-${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}.cloudfunctions.net/generateSavingsTip`;
             
             const idToken = await user.getIdToken();
 
