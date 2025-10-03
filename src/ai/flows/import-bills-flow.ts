@@ -9,9 +9,12 @@
  */
 
 import { ai } from '@/ai/genkit';
-import { z } from 'genkit';
+import { z } from 'zod';
 import { BillCategory } from '@/lib/types';
 import { categories } from '@/lib/mock-data';
+
+// Create a simple array of category names for the enum
+const categoryNames = categories.map(c => c.name) as [BillCategory, ...BillCategory[]];
 
 // Define the schema for a single parsed bill.
 // This is what the AI will try to extract for each line item.
@@ -19,7 +22,7 @@ export const ParsedBillSchema = z.object({
   name: z.string().describe('The name of the bill (e.g., Netflix, Rent, Electricity).'),
   amount: z.number().describe('The amount due for the bill.'),
   dueDate: z.string().describe("The due date of the bill. It should be a valid date string. If a year isn't specified, assume the current year."),
-  category: z.enum(categories.map(c => c.name) as [BillCategory, ...BillCategory[]]).describe('The category of the bill.'),
+  category: z.enum(categoryNames).describe('The category of the bill.'),
   frequency: z.enum(['one-time', 'monthly', 'yearly']).default('monthly').describe("The frequency of the bill (e.g., one-time, monthly, yearly). If not specified, 'monthly' is a good default."),
 });
 export type ParsedBill = z.infer<typeof ParsedBillSchema>;
@@ -47,7 +50,7 @@ const importPrompt = ai.definePrompt({
   output: { schema: BillImportOutputSchema },
   prompt: `You are an expert at parsing unstructured text and extracting financial information. The user has provided a block of text that contains a list of their bills. Your task is to analyze this text, identify each bill, and extract its details.
 
-  Here are the available categories: ${categories.map(c => c.name).join(', ')}.
+  Here are the available categories: ${categoryNames.join(', ')}.
 
   Analyze the following text and extract all the bills you can find:
 
