@@ -17,55 +17,9 @@ import { Skeleton } from './ui/skeleton';
 export function SavingsManager({ bills }: { bills: Bill[] }) {
     const { profile, loading: profileLoading } = useProfile();
     const { user } = useAuth();
-    const [tip, setTip] = useState('');
-    const [tipLoading, setTipLoading] = useState(false);
-    const [tipError, setTipError] = useState('');
-
+    
     const totalBills = bills.filter(b => !b.isPaid).reduce((acc, bill) => acc + bill.amount, 0);
     const leftoverFunds = (profile?.income || 0) - totalBills - (profile?.savingsGoal || 0);
-
-    const getTip = useCallback(async () => {
-        if (!user || !profile || !process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID) return;
-        setTipLoading(true);
-        setTipError('');
-        try {
-            const functionUrl = `https://us-central1-${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}.cloudfunctions.net/generateSavingsTip`;
-            
-            const idToken = await user.getIdToken();
-
-            const response = await fetch(functionUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${idToken}`
-                },
-                body: JSON.stringify({
-                    leftoverFunds: leftoverFunds,
-                    currency: profile.currency,
-                })
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error?.message || 'Failed to fetch savings tip');
-            }
-
-            const data = await response.json();
-            setTip(data.tip);
-        } catch (error: any) {
-            console.error(error);
-            setTipError(error.message || 'An unexpected error occurred.');
-        } finally {
-            setTipLoading(false);
-        }
-    }, [user, profile, leftoverFunds]);
-    
-    useEffect(() => {
-        if (user && profile) {
-            getTip();
-        }
-    }, [user, profile, getTip]);
-
 
     if (profileLoading) {
         return (
@@ -138,24 +92,12 @@ export function SavingsManager({ bills }: { bills: Bill[] }) {
                                 <PiggyBank className="text-accent" />
                                 Savings Tip
                             </div>
-                            <Button variant="ghost" size="icon" onClick={getTip} disabled={tipLoading}>
-                                <RefreshCw className={cn("h-4 w-4", tipLoading && "animate-spin")} />
-                            </Button>
                         </CardTitle>
                         <CardDescription>AI-powered suggestions to help you save.</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <div className="flex flex-col items-center justify-center text-center rounded-lg min-h-48 bg-secondary/50 p-4">
-                           {tipLoading ? (
-                                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                           ) : tipError ? (
-                                <Alert variant="destructive">
-                                    <AlertTitle>Error</AlertTitle>
-                                    <AlertDescription>{tipError}</AlertDescription>
-                                </Alert>
-                           ) : (
-                               <p className="font-semibold text-lg">{tip}</p>
-                           )}
+                           <p className="font-semibold text-lg text-muted-foreground">This feature is coming soon!</p>
                         </div>
                     </CardContent>
                 </Card>
