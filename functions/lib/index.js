@@ -36,7 +36,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.checkDueBills = exports.getSavingsTips = void 0;
+exports.checkDueBills = exports.generateSavingsTip = void 0;
 const functions = __importStar(require("firebase-functions"));
 const admin = __importStar(require("firebase-admin"));
 const genkit_1 = require("genkit");
@@ -64,7 +64,7 @@ const savingsPrompt = ai.definePrompt({
     prompt: `You are a friendly financial advisor. Based on the user's leftover funds of {{{leftoverFunds}}} {{{currency}}}, provide a single, short, actionable savings tip. Be encouraging. If the leftover amount is negative, the tip should focus on small ways to cut back on spending.`
 });
 // HTTP-triggered function to get savings tips
-exports.getSavingsTips = functions.https.onRequest((req, res) => {
+exports.generateSavingsTip = functions.https.onRequest((req, res) => {
     corsHandler(req, res, async () => {
         if (req.method !== 'POST') {
             res.status(405).send('Method Not Allowed');
